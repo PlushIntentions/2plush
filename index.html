@@ -316,16 +316,43 @@ body::before {
 .bottom-links {
   margin-top: 20px;
   display: flex; flex-direction: column;
-  align-items: center; gap: 8px;
+  align-items: center; gap: 10px;
+  width: 100%;
 }
-.bottom-links a {
-  font-size: 12px; opacity: .5;
-  color: var(--brand); text-decoration: none;
-  transition: opacity .2s;
-}
-.bottom-links a:hover { opacity: 1; }
 .bottom-links span {
   font-size: 11px; opacity: .35;
+}
+
+/* Onboarding button */
+.btn-onboarding {
+  width: 100%;
+  padding: 13px;
+  background: rgba(255,255,255,0.05);
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.65);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  transition: all .2s;
+}
+.btn-onboarding i { width: 14px; height: 14px; }
+.btn-onboarding:hover {
+  background: rgba(74,222,128,0.1);
+  border-color: rgba(74,222,128,0.4);
+  color: #4ade80;
+}
+.divider-or {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; opacity: .3;
+}
+.divider-or::before,
+.divider-or::after {
+  content: "";
+  flex: 1; height: 1px;
+  background: rgba(255,255,255,0.15);
 }
 
 /* ── PARTICLES ───────────────────────────────────────── */
@@ -473,8 +500,10 @@ body::before {
 
   <!-- BOTTOM LINKS -->
   <div class="bottom-links">
-    <a href="technician-onboarding.html" id="onboarding-link">
-      New technician? Apply here →
+    <div class="divider-or">or</div>
+    <a href="technician-onboarding.html" class="btn-onboarding" id="onboarding-link">
+      <i data-feather="user-plus"></i>
+      New Technician? Apply Here
     </a>
   </div>
 
@@ -569,7 +598,7 @@ function switchTab(tab) {
     badge.innerHTML    = `<i data-feather="shield"></i><span id="badge-text">ADMINISTRATOR ACCESS</span>`;
     divider.className  = "divider";
     panelA.classList.add("active");
-    onboarding.style.display = "none";
+    onboarding.style.display = "flex";
   } else {
     techBtn.className  = "tab-btn active-tech";
     adminBtn.className = "tab-btn";
@@ -577,7 +606,7 @@ function switchTab(tab) {
     badge.innerHTML    = `<i data-feather="tool"></i><span id="badge-text">TECHNICIAN ACCESS</span>`;
     divider.className  = "divider tech-divider";
     panelT.classList.add("active");
-    onboarding.style.display = "inline";
+    onboarding.style.display = "flex";
   }
 
   feather.replace();
@@ -779,8 +808,8 @@ function spawnParticles() {
   }
 }
 
-// Init: hide onboarding link on admin tab by default
-document.getElementById("onboarding-link").style.display = "none";
+// Init: show onboarding button on both tabs
+document.getElementById("onboarding-link").style.display = "flex";
 </script>
 </body>
 </html>
