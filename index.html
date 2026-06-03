@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plush Intentions – Login</title>
+
+<script src="https://unpkg.com/feather-icons"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root { --brand: #FF4F9F; }
+
+*, *::before, *::after {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  font-family: Inter, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: url('background.png') center/cover no-repeat fixed;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.50);
+  backdrop-filter: blur(3px);
+  z-index: -1;
+}
+
+/* ── GLASS ───────────────────────────────────────────── */
+.glass {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 24px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+
+/* ── LOADER ──────────────────────────────────────────── */
+#loader {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(14px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity .4s;
+}
+.loader-logo {
+  width: 150px;
+  filter: drop-shadow(0 0 10px var(--brand)) drop-shadow(0 0 24px var(--brand));
+  animation: pulse 1.2s infinite ease-in-out;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: .85; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+
+/* ── CARD ────────────────────────────────────────────── */
+.card {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 42px 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+/* ── LOGO ────────────────────────────────────────────── */
+.logo-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  margin-bottom: 24px;
+}
+.logo-wrap img {
+  width: 100px;
+  filter:
+    drop-shadow(0 0 10px var(--brand))
+    drop-shadow(0 0 22px var(--brand))
+    drop-shadow(0 0 40px var(--brand));
+  animation: glowPulse 3s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%,100% { filter: drop-shadow(0 0 10px var(--brand)) drop-shadow(0 0 22px var(--brand)); }
+  50%     { filter: drop-shadow(0 0 14px var(--brand)) drop-shadow(0 0 32px var(--brand)) drop-shadow(0 0 52px var(--brand)); }
+}
+.logo-wrap h1 {
+  font-size: 22px; font-weight: 700;
+  text-shadow: 0 0 8px var(--brand), 0 0 18px var(--brand);
+  letter-spacing: -.02em;
+}
+
+/* ── TABS ────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 26px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: transparent;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: .02em;
+}
+.tab-btn i { width: 14px; height: 14px; }
+.tab-btn.active {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(255,79,159,0.5);
+}
+.tab-btn.active-tech {
+  background: rgba(74,222,128,0.25);
+  color: #4ade80;
+  border: 1px solid rgba(74,222,128,0.4);
+  box-shadow: 0 0 14px rgba(74,222,128,0.2);
+}
+.tab-btn:not(.active):not(.active-tech):hover {
+  color: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.06);
+}
+
+/* ── ROLE BADGE ──────────────────────────────────────── */
+.role-badge {
+  display: inline-flex;
+  align-items: center; gap: 7px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .06em;
+  margin-bottom: 18px;
+  transition: all .3s;
+}
+.role-badge i { width: 12px; height: 12px; }
+.badge-admin {
+  background: rgba(255,79,159,0.12);
+  border: 1px solid rgba(255,79,159,0.3);
+  color: var(--brand);
+}
+.badge-tech {
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.3);
+  color: #4ade80;
+}
+
+/* ── DIVIDER ─────────────────────────────────────────── */
+.divider {
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,79,159,0.35), transparent);
+  margin-bottom: 22px;
+  transition: background .3s;
+}
+.divider.tech-divider {
+  background: linear-gradient(90deg, transparent, rgba(74,222,128,0.3), transparent);
+}
+
+/* ── FIELD ───────────────────────────────────────────── */
+.field {
+  width: 100%;
+  display: flex; flex-direction: column;
+  gap: 7px; margin-bottom: 16px;
+}
+.field label {
+  font-size: 12px; font-weight: 600;
+  opacity: .7; letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.input-wrap { position: relative; width: 100%; }
+.input-wrap i {
+  position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  opacity: .4; pointer-events: none;
+}
+.input-wrap input {
+  width: 100%;
+  padding: 13px 14px 13px 40px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; color: #fff;
+  font-size: 14px; outline: none;
+  transition: border .2s, box-shadow .2s, background .2s;
+}
+.input-wrap input::placeholder { color: rgba(255,255,255,0.28); }
+.input-wrap input:focus {
+  border-color: var(--brand);
+  background: rgba(255,79,159,0.07);
+  box-shadow: 0 0 0 3px rgba(255,79,159,0.14);
+}
+.input-wrap input.tech-focus:focus {
+  border-color: #4ade80;
+  background: rgba(74,222,128,0.05);
+  box-shadow: 0 0 0 3px rgba(74,222,128,0.12);
+}
+
+/* Toggle password */
+.toggle-pass {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: rgba(255,255,255,0.38);
+  cursor: pointer; padding: 0;
+  display: flex; align-items: center;
+  transition: color .2s;
+}
+.toggle-pass:hover { color: rgba(255,255,255,0.8); }
+.toggle-pass i { width: 15px; height: 15px; }
+
+/* ── FORGOT LINK ─────────────────────────────────────── */
+.forgot {
+  width: 100%;
+  text-align: right;
+  margin-top: -8px;
+  margin-bottom: 10px;
+}
+.forgot a {
+  font-size: 12px; color: var(--brand);
+  text-decoration: none; opacity: .8;
+  transition: opacity .2s;
+}
+.forgot a:hover { opacity: 1; }
+
+/* ── ALERTS ──────────────────────────────────────────── */
+.alert {
+  width: 100%; padding: 12px 16px;
+  border-radius: 10px; font-size: 13px;
+  margin-bottom: 14px; display: none;
+  line-height: 1.5;
+}
+.alert-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.35);  color: #fca5a5; }
+.alert-success { background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.35); color: #86efac; }
+
+/* ── BUTTONS ─────────────────────────────────────────── */
+.btn-brand {
+  width: 100%; padding: 14px;
+  background: var(--brand); border: none;
+  border-radius: 12px; color: #fff;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s;
+  box-shadow: 0 0 20px rgba(255,79,159,0.45);
+  display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  margin-top: 6px;
+}
+.btn-brand:hover   { opacity: .88; }
+.btn-brand:active  { transform: scale(.98); }
+.btn-brand:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-tech {
+  width: 100%; padding: 14px;
+  background: rgba(74,222,128,0.2);
+  border: 1px solid rgba(74,222,128,0.4);
+  border-radius: 12px; color: #4ade80;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s;
+  box-shadow: 0 0 16px rgba(74,222,128,0.2);
+  display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  margin-top: 6px;
+}
+.btn-tech:hover   { opacity: .85; background: rgba(74,222,128,0.28); }
+.btn-tech:active  { transform: scale(.98); }
+.btn-tech:disabled { opacity: .5; cursor: not-allowed; }
+
+.btn-ghost {
+  width: 100%; padding: 12px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 12px; color: rgba(255,255,255,0.75);
+  font-size: 14px; cursor: pointer;
+  transition: background .2s;
+  margin-top: 10px;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.12); }
+
+/* ── FORGOT PANEL ────────────────────────────────────── */
+#forgot-panel {
+  display: none; width: 100%;
+}
+#forgot-panel p {
+  font-size: 13px; opacity: .65;
+  line-height: 1.6; margin-bottom: 16px;
+  text-align: center;
+}
+
+/* ── LOGIN PANELS ────────────────────────────────────── */
+.login-panel { display: none; width: 100%; }
+.login-panel.active { display: block; }
+
+/* ── BOTTOM LINKS ────────────────────────────────────── */
+.bottom-links {
+  margin-top: 20px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+}
+.bottom-links a {
+  font-size: 12px; opacity: .5;
+  color: var(--brand); text-decoration: none;
+  transition: opacity .2s;
+}
+.bottom-links a:hover { opacity: 1; }
+.bottom-links span {
+  font-size: 11px; opacity: .35;
+}
+
+/* ── PARTICLES ───────────────────────────────────────── */
+.particles {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
+.particle {
+  position: absolute; border-radius: 50%;
+  background: var(--brand); opacity: 0;
+  animation: float linear infinite;
+}
+@keyframes float {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: .55; }
+  90%  { opacity: .18; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <img src="logo.png" class="loader-logo" alt="Plush Intentions" />
+</div>
+
+<!-- PARTICLES -->
+<div class="particles" id="particles"></div>
+
+<!-- CARD -->
+<div class="card glass">
+
+  <!-- LOGO -->
+  <div class="logo-wrap">
+    <img src="logo.png" alt="Plush Intentions" />
+    <h1>Plush Intentions</h1>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-admin" onclick="switchTab('admin')">
+      <i data-feather="shield"></i> Admin
+    </button>
+    <button class="tab-btn" id="tab-tech" onclick="switchTab('tech')">
+      <i data-feather="tool"></i> Technician
+    </button>
+  </div>
+
+  <!-- ROLE BADGE -->
+  <span class="role-badge badge-admin" id="role-badge">
+    <i data-feather="shield"></i>
+    <span id="badge-text">ADMINISTRATOR ACCESS</span>
+  </span>
+
+  <!-- DIVIDER -->
+  <div class="divider" id="main-divider"></div>
+
+  <!-- ALERTS -->
+  <div class="alert alert-error"   id="alert-error"></div>
+  <div class="alert alert-success" id="alert-success"></div>
+
+  <!-- ── ADMIN LOGIN PANEL ─────────────────────────── -->
+  <div class="login-panel active" id="panel-admin">
+    <div class="field">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <i data-feather="mail"></i>
+        <input type="email" id="admin-email"
+               placeholder="admin@plushintentions.com"
+               autocomplete="email" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="input-wrap">
+        <i data-feather="lock"></i>
+        <input type="password" id="admin-password"
+               placeholder="••••••••"
+               autocomplete="current-password" />
+        <button class="toggle-pass" onclick="togglePass('admin-password','eye-admin')">
+          <i data-feather="eye" id="eye-admin"></i>
+        </button>
+      </div>
+    </div>
+    <div class="forgot">
+      <a href="#" onclick="showForgot('admin'); return false;">Forgot password?</a>
+    </div>
+    <button class="btn-brand" id="btn-admin" onclick="doAdminLogin()">
+      <i data-feather="log-in"></i>
+      Sign In to Dashboard
+    </button>
+  </div>
+
+  <!-- ── TECHNICIAN LOGIN PANEL ────────────────────── -->
+  <div class="login-panel" id="panel-tech">
+    <div class="field">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <i data-feather="mail"></i>
+        <input type="email" id="tech-email"
+               placeholder="you@example.com"
+               autocomplete="email"
+               class="tech-focus" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="input-wrap">
+        <i data-feather="lock"></i>
+        <input type="password" id="tech-password"
+               placeholder="••••••••"
+               autocomplete="current-password"
+               class="tech-focus" />
+        <button class="toggle-pass" onclick="togglePass('tech-password','eye-tech')">
+          <i data-feather="eye" id="eye-tech"></i>
+        </button>
+      </div>
+    </div>
+    <div class="forgot">
+      <a href="#" onclick="showForgot('tech'); return false;">Forgot password?</a>
+    </div>
+    <button class="btn-tech" id="btn-tech" onclick="doTechLogin()">
+      <i data-feather="log-in"></i>
+      Sign In to Portal
+    </button>
+  </div>
+
+  <!-- ── FORGOT PASSWORD PANEL ─────────────────────── -->
+  <div id="forgot-panel">
+    <p>Enter your email and we'll send you a password reset link.</p>
+    <div class="field">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <i data-feather="mail"></i>
+        <input type="email" id="reset-email" placeholder="you@example.com" />
+      </div>
+    </div>
+    <button class="btn-brand" onclick="doReset()">
+      <i data-feather="send"></i>
+      Send Reset Link
+    </button>
+    <button class="btn-ghost" onclick="showLoginPanel()">← Back to Sign In</button>
+  </div>
+
+  <!-- BOTTOM LINKS -->
+  <div class="bottom-links">
+    <a href="technician-onboarding.html" id="onboarding-link">
+      New technician? Apply here →
+    </a>
+  </div>
+
+</div><!-- /card -->
+
+<script>
+const SUPABASE_URL = "https://gsneugdwoxpibajghwge.supabase.co";
+const SUPABASE_KEY = "sb_publishable_bbsF43-TXGgEumRGflGf5A_apC1dP3T";
+
+let sb;
+let activeTab = "admin"; // tracks current tab
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+window.addEventListener("load", async () => {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  feather.replace();
+  spawnParticles();
+
+  setTimeout(() => {
+    const l = document.getElementById("loader");
+    l.style.opacity = "0";
+    setTimeout(() => l.style.display = "none", 400);
+  }, 1400);
+
+  // Check existing session
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await routeSession(session);
+  }
+});
+
+/* ─────────────────────────────────────────
+   ROUTE EXISTING SESSION
+───────────────────────────────────────── */
+async function routeSession(session) {
+  // Check admin first
+  const { data: adminRow } = await sb
+    .from("admin_users")
+    .select("id")
+    .eq("user_id", session.user.id)
+    .single();
+
+  if (adminRow) {
+    window.location.href = "admin-dashboard.html";
+    return;
+  }
+
+  // Check technician
+  const { data: techRow } = await sb
+    .from("technicians")
+    .select("id, status")
+    .eq("user_id", session.user.id)
+    .single();
+
+  if (techRow && techRow.status === "active") {
+    window.location.href = "technician-portal.html";
+    return;
+  }
+
+  // Neither — sign out
+  await sb.auth.signOut();
+}
+
+/* ─────────────────────────────────────────
+   TAB SWITCHING
+───────────────────────────────────────── */
+function switchTab(tab) {
+  activeTab = tab;
+  hideAlerts();
+
+  const adminBtn  = document.getElementById("tab-admin");
+  const techBtn   = document.getElementById("tab-tech");
+  const badge     = document.getElementById("role-badge");
+  const badgeTxt  = document.getElementById("badge-text");
+  const divider   = document.getElementById("main-divider");
+  const panelA    = document.getElementById("panel-admin");
+  const panelT    = document.getElementById("panel-tech");
+  const forgot    = document.getElementById("forgot-panel");
+  const onboarding = document.getElementById("onboarding-link");
+
+  // Hide forgot if switching tabs
+  forgot.style.display = "none";
+  panelA.classList.remove("active");
+  panelT.classList.remove("active");
+
+  if (tab === "admin") {
+    adminBtn.className = "tab-btn active";
+    techBtn.className  = "tab-btn";
+    badge.className    = "role-badge badge-admin";
+    badge.innerHTML    = `<i data-feather="shield"></i><span id="badge-text">ADMINISTRATOR ACCESS</span>`;
+    divider.className  = "divider";
+    panelA.classList.add("active");
+    onboarding.style.display = "none";
+  } else {
+    techBtn.className  = "tab-btn active-tech";
+    adminBtn.className = "tab-btn";
+    badge.className    = "role-badge badge-tech";
+    badge.innerHTML    = `<i data-feather="tool"></i><span id="badge-text">TECHNICIAN ACCESS</span>`;
+    divider.className  = "divider tech-divider";
+    panelT.classList.add("active");
+    onboarding.style.display = "inline";
+  }
+
+  feather.replace();
+}
+
+/* ─────────────────────────────────────────
+   ADMIN LOGIN
+───────────────────────────────────────── */
+async function doAdminLogin() {
+  const email = document.getElementById("admin-email").value.trim();
+  const pass  = document.getElementById("admin-password").value;
+  const btn   = document.getElementById("btn-admin");
+
+  hideAlerts();
+  if (!email || !pass) return showError("Please enter your email and password.");
+
+  setLoading(btn, true, "btn-brand", "Signing in…");
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+  if (error) {
+    setLoading(btn, false, "btn-brand", `<i data-feather="log-in"></i> Sign In to Dashboard`);
+    return showError("Invalid email or password. Please try again.");
+  }
+
+  const { data: adminRow } = await sb
+    .from("admin_users")
+    .select("id")
+    .eq("user_id", data.user.id)
+    .single();
+
+  if (!adminRow) {
+    await sb.auth.signOut();
+    setLoading(btn, false, "btn-brand", `<i data-feather="log-in"></i> Sign In to Dashboard`);
+    return showError("Access denied. This account does not have admin privileges.");
+  }
+
+  showSuccess("Welcome back! Redirecting to dashboard…");
+  setTimeout(() => { window.location.href = "admin-dashboard.html"; }, 1000);
+}
+
+/* ─────────────────────────────────────────
+   TECHNICIAN LOGIN
+───────────────────────────────────────── */
+async function doTechLogin() {
+  const email = document.getElementById("tech-email").value.trim();
+  const pass  = document.getElementById("tech-password").value;
+  const btn   = document.getElementById("btn-tech");
+
+  hideAlerts();
+  if (!email || !pass) return showError("Please enter your email and password.");
+
+  setLoading(btn, true, "btn-tech", "Signing in…");
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+  if (error) {
+    setLoading(btn, false, "btn-tech", `<i data-feather="log-in"></i> Sign In to Portal`);
+    return showError("Invalid email or password. Please try again.");
+  }
+
+  const { data: techRow } = await sb
+    .from("technicians")
+    .select("id, status")
+    .eq("user_id", data.user.id)
+    .single();
+
+  if (!techRow) {
+    await sb.auth.signOut();
+    setLoading(btn, false, "btn-tech", `<i data-feather="log-in"></i> Sign In to Portal`);
+    return showError("No technician account found. Please apply via onboarding.");
+  }
+
+  if (techRow.status === "pending_review") {
+    await sb.auth.signOut();
+    setLoading(btn, false, "btn-tech", `<i data-feather="log-in"></i> Sign In to Portal`);
+    return showError("Your account is pending admin approval. You'll be notified when activated.");
+  }
+
+  if (techRow.status !== "active") {
+    await sb.auth.signOut();
+    setLoading(btn, false, "btn-tech", `<i data-feather="log-in"></i> Sign In to Portal`);
+    return showError("Your account is not currently active. Please contact your administrator.");
+  }
+
+  showSuccess("Welcome! Redirecting to your portal…");
+  setTimeout(() => { window.location.href = "technician-portal.html"; }, 1000);
+}
+
+/* ─────────────────────────────────────────
+   FORGOT PASSWORD
+───────────────────────────────────────── */
+function showForgot(tab) {
+  document.getElementById("panel-admin").classList.remove("active");
+  document.getElementById("panel-tech").classList.remove("active");
+  document.getElementById("forgot-panel").style.display = "block";
+
+  // Pre-fill email from whichever tab is active
+  const email = tab === "admin"
+    ? document.getElementById("admin-email").value
+    : document.getElementById("tech-email").value;
+  document.getElementById("reset-email").value = email;
+
+  hideAlerts();
+}
+
+function showLoginPanel() {
+  document.getElementById("forgot-panel").style.display = "none";
+  hideAlerts();
+  if (activeTab === "admin") {
+    document.getElementById("panel-admin").classList.add("active");
+  } else {
+    document.getElementById("panel-tech").classList.add("active");
+  }
+}
+
+async function doReset() {
+  const email = document.getElementById("reset-email").value.trim();
+  hideAlerts();
+  if (!email) return showError("Please enter your email address.");
+
+  const redirectTo = window.location.origin + "/reset";
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) return showError("Could not send reset email. Please try again.");
+
+  showSuccess("Reset link sent! Check your inbox.");
+  setTimeout(showLoginPanel, 3000);
+}
+
+/* ─────────────────────────────────────────
+   PASSWORD TOGGLE
+───────────────────────────────────────── */
+function togglePass(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById(iconId);
+  input.type  = input.type === "password" ? "text" : "password";
+  icon.setAttribute("data-feather", input.type === "password" ? "eye" : "eye-off");
+  feather.replace();
+}
+
+/* ─────────────────────────────────────────
+   LOADING STATE
+───────────────────────────────────────── */
+function setLoading(btn, loading, cls, label) {
+  btn.disabled  = loading;
+  btn.className = cls;
+  btn.innerHTML = loading
+    ? `<i data-feather="loader"></i> ${label}`
+    : label;
+  feather.replace();
+}
+
+/* ─────────────────────────────────────────
+   ALERTS
+───────────────────────────────────────── */
+function showError(msg) {
+  const el = document.getElementById("alert-error");
+  el.textContent = msg; el.style.display = "block";
+}
+function showSuccess(msg) {
+  const el = document.getElementById("alert-success");
+  el.textContent = msg; el.style.display = "block";
+}
+function hideAlerts() {
+  document.getElementById("alert-error").style.display   = "none";
+  document.getElementById("alert-success").style.display = "none";
+}
+
+/* ─────────────────────────────────────────
+   ENTER KEY
+───────────────────────────────────────── */
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  if (document.getElementById("forgot-panel").style.display === "block") {
+    doReset();
+  } else if (activeTab === "admin") {
+    doAdminLogin();
+  } else {
+    doTechLogin();
+  }
+});
+
+/* ─────────────────────────────────────────
+   PARTICLES
+───────────────────────────────────────── */
+function spawnParticles() {
+  const c = document.getElementById("particles");
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    const size = Math.random() * 3 + 1;
+    p.style.width             = `${size}px`;
+    p.style.height            = `${size}px`;
+    p.style.left              = `${Math.random() * 100}%`;
+    p.style.animationDuration = `${Math.random() * 12 + 8}s`;
+    p.style.animationDelay    = `${Math.random() * 8}s`;
+    c.appendChild(p);
+  }
+}
+
+// Init: hide onboarding link on admin tab by default
+document.getElementById("onboarding-link").style.display = "none";
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/",           "dest": "/index.html"                 },
+    { "src": "/login",      "dest": "/index.html"                 },
+    { "src": "/admin",      "dest": "/admin-dashboard.html"       },
+    { "src": "/tech",       "dest": "/technician-portal.html"     },
+    { "src": "/onboarding", "dest": "/technician-onboarding.html" },
+    { "src": "/reset",      "dest": "/reset-password.html"        },
+    { "src": "/verify",     "dest": "/email-verify.html"          },
+    { "src": "/(.*)",       "dest": "/$1"                         }
+  ]
+}

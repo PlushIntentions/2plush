@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plush Intentions – Email Verified</title>
+
+<script src="https://unpkg.com/feather-icons"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root { --brand: #FF4F9F; }
+
+*, *::before, *::after {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  font-family: Inter, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: url('background.png') center/cover no-repeat fixed;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.52);
+  backdrop-filter: blur(3px);
+  z-index: -1;
+}
+
+.glass {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 24px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+
+/* LOADER */
+#loader {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(14px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  transition: opacity .5s;
+}
+.loader-logo {
+  width: 140px;
+  filter: drop-shadow(0 0 10px var(--brand)) drop-shadow(0 0 24px var(--brand));
+  animation: pulse 1.2s infinite ease-in-out;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: .85; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+
+/* CARD */
+.card {
+  width: 100%;
+  max-width: 420px;
+  padding: 52px 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  z-index: 10;
+  text-align: center;
+}
+
+/* LOGO */
+.logo-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  margin-bottom: 28px;
+}
+.logo-wrap img {
+  width: 90px;
+  filter: drop-shadow(0 0 10px var(--brand)) drop-shadow(0 0 22px var(--brand));
+  animation: glowPulse 3s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%,100% { filter: drop-shadow(0 0 10px var(--brand)) drop-shadow(0 0 22px var(--brand)); }
+  50%     { filter: drop-shadow(0 0 16px var(--brand)) drop-shadow(0 0 36px var(--brand)); }
+}
+.logo-wrap h2 {
+  font-size: 18px; font-weight: 700;
+  text-shadow: 0 0 8px var(--brand);
+}
+
+.divider {
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,79,159,0.4), transparent);
+  margin-bottom: 30px;
+}
+
+/* STATUS PANELS */
+.status-panel {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+}
+.status-panel.active { display: flex; }
+
+/* Icon circles */
+.icon-circle {
+  width: 84px; height: 84px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  animation: popIn .5s ease;
+}
+@keyframes popIn {
+  0%   { transform: scale(0); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.icon-circle i { width: 38px; height: 38px; }
+
+.icon-success {
+  background: rgba(74,222,128,0.12);
+  border: 2px solid rgba(74,222,128,0.45);
+}
+.icon-success i { color: #4ade80; }
+
+.icon-pending {
+  background: rgba(251,191,36,0.12);
+  border: 2px solid rgba(251,191,36,0.45);
+}
+.icon-pending i { color: #fbbf24; }
+
+.icon-error {
+  background: rgba(239,68,68,0.12);
+  border: 2px solid rgba(239,68,68,0.4);
+}
+.icon-error i { color: #f87171; }
+
+.icon-loading {
+  background: rgba(255,79,159,0.1);
+  border: 2px solid rgba(255,79,159,0.4);
+  animation: spin 1.5s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.icon-loading i { color: var(--brand); }
+
+/* Text */
+.status-panel h2 { font-size: 24px; font-weight: 800; }
+.status-panel p  {
+  font-size: 14px; opacity: .68;
+  line-height: 1.65; max-width: 320px;
+}
+
+/* Role badge */
+.role-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+}
+.role-admin {
+  background: rgba(255,79,159,0.15);
+  border: 1px solid rgba(255,79,159,0.35);
+  color: var(--brand);
+}
+.role-tech {
+  background: rgba(74,222,128,0.12);
+  border: 1px solid rgba(74,222,128,0.35);
+  color: #4ade80;
+}
+
+/* Countdown */
+.countdown {
+  font-size: 13px; opacity: .5;
+}
+
+/* Buttons */
+.btn-brand {
+  width: 100%; padding: 14px;
+  background: var(--brand); border: none;
+  border-radius: 12px; color: #fff;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  box-shadow: 0 0 18px rgba(255,79,159,0.4);
+  transition: opacity .2s;
+}
+.btn-brand:hover { opacity: .88; }
+.btn-ghost {
+  width: 100%; padding: 13px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; color: #fff;
+  font-size: 14px; cursor: pointer;
+  text-decoration: none;
+  display: flex; align-items: center;
+  justify-content: center; gap: 8px;
+  transition: background .2s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.12); }
+
+/* Particles */
+.particles {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
+.particle {
+  position: absolute; border-radius: 50%;
+  background: var(--brand); opacity: 0;
+  animation: float linear infinite;
+}
+@keyframes float {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: .5; }
+  90%  { opacity: .15; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <img src="logo.png" class="loader-logo" alt="Plush Intentions" />
+</div>
+
+<div class="particles" id="particles"></div>
+
+<div class="card glass">
+
+  <div class="logo-wrap">
+    <img src="logo.png" alt="Plush Intentions" />
+    <h2>Plush Intentions</h2>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CHECKING -->
+  <div class="status-panel active" id="panel-checking">
+    <div class="icon-circle icon-loading">
+      <i data-feather="refresh-cw"></i>
+    </div>
+    <h2>Verifying…</h2>
+    <p>Please wait while we confirm your email address.</p>
+  </div>
+
+  <!-- SUCCESS: ADMIN -->
+  <div class="status-panel" id="panel-admin">
+    <div class="icon-circle icon-success">
+      <i data-feather="shield"></i>
+    </div>
+    <span class="role-badge role-admin"><i data-feather="shield"></i> Admin Account</span>
+    <h2>Email Confirmed!</h2>
+    <p>Your admin account is verified and active. You'll be redirected to the dashboard automatically.</p>
+    <div class="countdown" id="admin-countdown">Redirecting in 3…</div>
+    <a class="btn-brand" href="admin-login.html">
+      <i data-feather="log-in"></i>
+      Go to Admin Login
+    </a>
+  </div>
+
+  <!-- SUCCESS: TECHNICIAN -->
+  <div class="status-panel" id="panel-tech">
+    <div class="icon-circle icon-success">
+      <i data-feather="check-circle"></i>
+    </div>
+    <span class="role-badge role-tech"><i data-feather="tool"></i> Technician Account</span>
+    <h2>Email Confirmed!</h2>
+    <p>Your technician account has been verified. Your application is under review — you'll be notified once approved.</p>
+    <a class="btn-brand" href="technician-portal.html">
+      <i data-feather="log-in"></i>
+      Go to Technician Login
+    </a>
+  </div>
+
+  <!-- PENDING REVIEW -->
+  <div class="status-panel" id="panel-pending">
+    <div class="icon-circle icon-pending">
+      <i data-feather="clock"></i>
+    </div>
+    <h2>Account Pending</h2>
+    <p>Your email is confirmed but your account is still under admin review. You'll receive an email once you're approved and can sign in.</p>
+    <a class="btn-ghost" href="technician-portal.html">
+      <i data-feather="arrow-left"></i>
+      Back to Login
+    </a>
+  </div>
+
+  <!-- ERROR / EXPIRED -->
+  <div class="status-panel" id="panel-error">
+    <div class="icon-circle icon-error">
+      <i data-feather="alert-triangle"></i>
+    </div>
+    <h2>Link Expired</h2>
+    <p>This verification link has expired or already been used. Please sign up again or contact your administrator.</p>
+    <a class="btn-brand" href="technician-onboarding.html">
+      <i data-feather="user-plus"></i>
+      Sign Up Again
+    </a>
+    <a class="btn-ghost" href="admin-login.html">
+      <i data-feather="shield"></i>
+      Admin Login
+    </a>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://gsneugdwoxpibajghwge.supabase.co";
+const SUPABASE_KEY = "sb_publishable_bbsF43-TXGgEumRGflGf5A_apC1dP3T";
+
+let sb;
+
+window.addEventListener("load", async () => {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  feather.replace();
+  spawnParticles();
+
+  // Hide loader after brief brand moment
+  setTimeout(() => {
+    const l = document.getElementById("loader");
+    l.style.opacity = "0";
+    setTimeout(() => l.style.display = "none", 400);
+  }, 1400);
+
+  // Listen for email confirmation event
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN" && session) {
+      await handleVerified(session);
+    } else if (event === "TOKEN_REFRESHED") {
+      // Already signed in — check role
+      await handleVerified(session);
+    }
+  });
+
+  // Fallback: check existing session (handles page reloads)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await handleVerified(session);
+  } else {
+    // No token in URL and no session → error state after timeout
+    setTimeout(() => {
+      // Only show error if still on checking panel
+      if (document.getElementById("panel-checking").classList.contains("active")) {
+        showPanel("panel-error");
+      }
+    }, 4000);
+  }
+});
+
+/* ── HANDLE VERIFIED SESSION ─────────────── */
+async function handleVerified(session) {
+  if (!session) { showPanel("panel-error"); return; }
+
+  const userId = session.user.id;
+
+  // Check if admin
+  const { data: adminRow } = await sb
+    .from("admin_users")
+    .select("id")
+    .eq("user_id", userId)
+    .single();
+
+  if (adminRow) {
+    showPanel("panel-admin");
+    startCountdown("admin-countdown", 3, "admin-login.html");
+    return;
+  }
+
+  // Check if technician
+  const { data: techRow } = await sb
+    .from("technicians")
+    .select("id, status")
+    .eq("user_id", userId)
+    .single();
+
+  if (techRow) {
+    if (techRow.status === "pending_review") {
+      showPanel("panel-pending");
+    } else {
+      showPanel("panel-tech");
+    }
+    return;
+  }
+
+  // Signed in but no matching record
+  showPanel("panel-error");
+}
+
+/* ── COUNTDOWN REDIRECT ──────────────────── */
+function startCountdown(elId, seconds, url) {
+  const el = document.getElementById(elId);
+  let count = seconds;
+  const tick = setInterval(() => {
+    count--;
+    el.textContent = `Redirecting in ${count}…`;
+    if (count <= 0) {
+      clearInterval(tick);
+      window.location.href = url;
+    }
+  }, 1000);
+}
+
+/* ── PANEL SWITCHER ──────────────────────── */
+function showPanel(id) {
+  document.querySelectorAll(".status-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  feather.replace();
+}
+
+/* ── PARTICLES ───────────────────────────── */
+function spawnParticles() {
+  const c = document.getElementById("particles");
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    const size = Math.random() * 3 + 1;
+    p.style.width             = `${size}px`;
+    p.style.height            = `${size}px`;
+    p.style.left              = `${Math.random() * 100}%`;
+    p.style.animationDuration = `${Math.random() * 12 + 8}s`;
+    p.style.animationDelay    = `${Math.random() * 8}s`;
+    c.appendChild(p);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plush Intentions – Technician Portal</title>
+
+<!-- ICONS -->
+<script src="https://unpkg.com/feather-icons"></script>
+
+<!-- MAPBOX -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ── BRAND ───────────────────────────────────────────── */
+:root { --brand: #FF4F9F; }
+
+/* ── RESET ───────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  font-family: Inter, sans-serif;
+}
+
+/* ── BACKGROUND ──────────────────────────────────────── */
+body {
+  background: url('background.png') center/cover no-repeat fixed;
+  color: #fff;
+  overflow: hidden;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(2px);
+  z-index: -10;
+}
+
+/* ── GLASS ───────────────────────────────────────────── */
+.glass {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(26px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 22px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.22);
+}
+
+/* ── LOADER ──────────────────────────────────────────── */
+#loader {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(14px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.loader-logo {
+  width: 160px;
+  filter: drop-shadow(0 0 10px var(--brand)) drop-shadow(0 0 24px var(--brand));
+  animation: pulse 1.2s infinite ease-in-out;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity:.85; }
+  50%      { transform: scale(1.08); opacity:1; }
+}
+
+/* ── LOGIN SCREEN ────────────────────────────────────── */
+#login-screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.login-card {
+  width: 380px;
+  padding: 40px 36px;
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.login-card img { width: 110px; filter: drop-shadow(0 0 14px var(--brand)); }
+.login-card h2 {
+  font-size: 22px; font-weight: 700;
+  text-shadow: 0 0 8px var(--brand);
+}
+.login-card p { font-size: 13px; opacity: .7; text-align: center; }
+.field {
+  width: 100%;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.field label { font-size: 13px; opacity: .8; }
+.field input {
+  width: 100%; padding: 11px 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px; color: #fff; font-size: 14px;
+  outline: none; transition: border .2s;
+}
+.field input:focus { border-color: var(--brand); }
+.btn-brand {
+  width: 100%; padding: 12px;
+  background: var(--brand); border: none; border-radius: 12px;
+  color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s;
+  box-shadow: 0 0 16px rgba(255,79,159,0.5);
+}
+.btn-brand:hover { opacity: .88; }
+.login-error {
+  color: #ff6b6b; font-size: 13px;
+  display: none; text-align: center;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────── */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: 240px; height: 100vh;
+  padding: 24px;
+  display: flex; flex-direction: column;
+  z-index: 20;
+}
+.brand {
+  display: flex; flex-direction: column;
+  align-items: center; margin-bottom: 28px;
+}
+.brand img {
+  width: 110px;
+  filter: drop-shadow(0 0 10px var(--brand)) drop-shadow(0 0 22px var(--brand));
+  margin-bottom: 10px;
+}
+.brand-title {
+  font-size: 19px; font-weight: 600;
+  text-align: center;
+  text-shadow: 0 0 6px var(--brand), 0 0 12px var(--brand);
+}
+
+/* Tech name badge */
+.tech-badge {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255,79,159,0.12);
+  border: 1px solid rgba(255,79,159,0.3);
+  border-radius: 12px;
+  margin-bottom: 22px;
+}
+.tech-badge-avatar {
+  width: 36px; height: 36px;
+  background: var(--brand);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px;
+  flex-shrink: 0;
+}
+.tech-badge-name { font-size: 14px; font-weight: 600; }
+.tech-badge-status { font-size: 11px; opacity: .7; }
+
+.sidebar a {
+  display: flex; align-items: center; gap: 10px;
+  color: #fff; text-decoration: none;
+  opacity: .82; margin-bottom: 16px;
+  font-size: 15px; cursor: pointer;
+  padding: 8px 10px; border-radius: 10px;
+  transition: background .2s, opacity .2s;
+}
+.sidebar a:hover { opacity:1; background: rgba(255,255,255,0.07); }
+.sidebar a.active {
+  opacity:1;
+  background: rgba(255,79,159,0.18);
+  border: 1px solid rgba(255,79,159,0.3);
+}
+.sidebar a i { width:20px; height:20px; flex-shrink:0; }
+
+/* GPS pill */
+.gps-pill {
+  margin-top: auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  margin-bottom: 14px;
+}
+.gps-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #aaa;
+  flex-shrink: 0;
+  transition: background .3s;
+}
+.gps-dot.active { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+
+.btn-logout {
+  width: 100%; padding: 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; color: #fff;
+  font-size: 14px; cursor: pointer;
+  transition: background .2s;
+}
+.btn-logout:hover { background: rgba(255,79,159,0.25); }
+
+/* ── TOP BAR ─────────────────────────────────────────── */
+.topbar {
+  position: fixed; top: 0; left: 240px; right: 0;
+  height: 70px;
+  display: flex; align-items: center; padding: 0 24px;
+  font-size: 17px; z-index: 20;
+}
+#greeting { font-weight: 500; opacity: .9; }
+
+/* ── MAIN PANEL ──────────────────────────────────────── */
+.main-panel {
+  position: fixed;
+  top: 90px; left: 260px; right: 20px; bottom: 20px;
+  overflow: hidden; z-index: 30;
+}
+.panel {
+  width: 100%; height: 100%;
+  border-radius: 22px; overflow-y: auto; padding: 24px;
+}
+.panel.no-scroll { overflow: hidden; padding: 0; }
+
+/* ── MAP ─────────────────────────────────────────────── */
+#map { width: 100%; height: 100%; border-radius: 22px; }
+
+/* ── HIDDEN ──────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ── SECTION HEADER ──────────────────────────────────── */
+.section-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.section-header h2 { font-size: 22px; font-weight: 700; }
+.badge-count {
+  background: var(--brand);
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+}
+
+/* ── JOB CARD ────────────────────────────────────────── */
+.job-card {
+  padding: 20px 22px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: border-color .2s;
+}
+.job-card:hover { border-color: rgba(255,79,159,0.4); }
+
+.job-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+.job-meta {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 14px;
+}
+.job-meta-item { font-size: 13px; opacity: .8; }
+.job-meta-item strong { opacity: 1; color: #fff; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  margin-bottom: 14px;
+}
+.status-pending  { background: rgba(251,191,36,0.2);  border: 1px solid rgba(251,191,36,0.5);  color: #fbbf24; }
+.status-active   { background: rgba(74,222,128,0.2);  border: 1px solid rgba(74,222,128,0.5);  color: #4ade80; }
+.status-completed{ background: rgba(148,163,184,0.2); border: 1px solid rgba(148,163,184,0.5); color: #94a3b8; }
+
+.job-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-action {
+  padding: 9px 18px;
+  border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s;
+}
+.btn-start    { background: #4ade80; color: #0a0a0a; }
+.btn-complete { background: var(--brand); color: #fff; box-shadow: 0 0 12px rgba(255,79,159,0.4); }
+.btn-map      { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.btn-action:hover { opacity: .82; }
+
+/* ── EMPTY STATE ─────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 200px; opacity: .5; gap: 12px;
+}
+.empty-state i { width: 48px; height: 48px; }
+
+/* ── PROFILE PANEL ───────────────────────────────────── */
+.profile-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-top: 20px;
+}
+.profile-field {
+  padding: 16px 18px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+}
+.profile-field label { font-size: 11px; opacity: .6; display: block; margin-bottom: 5px; }
+.profile-field span  { font-size: 15px; font-weight: 600; }
+
+/* ── TOAST ───────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 30px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20,20,20,0.9);
+  border: 1px solid rgba(255,79,159,0.4);
+  color: #fff; padding: 12px 24px;
+  border-radius: 12px; font-size: 14px;
+  z-index: 9000; opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+#toast.show { opacity: 1; }
+
+/* ── MAP JOB MARKER ──────────────────────────────────── */
+.job-marker {
+  width: 22px; height: 22px;
+  background: #fbbf24;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(251,191,36,0.7);
+}
+.me-marker {
+  width: 26px; height: 26px;
+  background: var(--brand);
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 14px var(--brand);
+  animation: mePulse 1.4s infinite ease-in-out;
+}
+@keyframes mePulse {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.2); }
+}
+
+/* ── SCROLLBAR ───────────────────────────────────────── */
+.panel::-webkit-scrollbar { width: 6px; }
+.panel::-webkit-scrollbar-track { background: transparent; }
+.panel::-webkit-scrollbar-thumb { background: rgba(255,79,159,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <img src="logo.png" class="loader-logo" alt="Loading" />
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card glass">
+    <img src="logo.png" alt="Plush Intentions" />
+    <h2>Technician Login</h2>
+    <p>Sign in to access your jobs, route map, and live tracking.</p>
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" />
+    </div>
+    <div class="login-error" id="login-error">Invalid email or password. Please try again.</div>
+    <button class="btn-brand" onclick="doLogin()">Sign In</button>
+    <p style="font-size:12px; opacity:.55;">Don't have an account? <a href="technician-onboarding.html" style="color:var(--brand);">Apply here →</a></p>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar glass hidden" id="sidebar">
+  <div class="brand">
+    <img src="logo.png" alt="Plush Intentions" />
+    <h2 class="brand-title">Plush Intentions</h2>
+  </div>
+
+  <div class="tech-badge" id="tech-badge">
+    <div class="tech-badge-avatar" id="tech-avatar">?</div>
+    <div>
+      <div class="tech-badge-name" id="tech-name">Loading…</div>
+      <div class="tech-badge-status">● On Duty</div>
+    </div>
+  </div>
+
+  <a id="nav-map"       onclick="showPanel('map-panel')"       class="active"><i data-feather="map"></i> My Map</a>
+  <a id="nav-active"    onclick="showPanel('active-panel')"><i data-feather="briefcase"></i> Active Jobs</a>
+  <a id="nav-completed" onclick="showPanel('completed-panel')"><i data-feather="check-circle"></i> Completed</a>
+  <a id="nav-profile"   onclick="showPanel('profile-panel')"><i data-feather="user"></i> My Profile</a>
+
+  <div class="gps-pill">
+    <div class="gps-dot" id="gps-dot"></div>
+    <span id="gps-label">GPS: Locating…</span>
+  </div>
+
+  <button class="btn-logout" onclick="doLogout()">
+    <i data-feather="log-out" style="vertical-align:middle; margin-right:6px;"></i> Sign Out
+  </button>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar glass hidden" id="topbar">
+  <span id="greeting"></span>
+</div>
+
+<!-- MAIN PANEL -->
+<div class="main-panel glass hidden" id="main-panel">
+
+  <!-- MAP -->
+  <div id="map-panel" class="panel no-scroll">
+    <div id="map"></div>
+  </div>
+
+  <!-- ACTIVE JOBS -->
+  <div id="active-panel" class="panel hidden">
+    <div class="section-header">
+      <h2>Active Jobs</h2>
+      <span class="badge-count" id="active-count">0</span>
+    </div>
+    <div id="active-list"></div>
+  </div>
+
+  <!-- COMPLETED JOBS -->
+  <div id="completed-panel" class="panel hidden">
+    <div class="section-header">
+      <h2>Completed Jobs</h2>
+      <span class="badge-count" id="completed-count">0</span>
+    </div>
+    <div id="completed-list"></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profile-panel" class="panel hidden">
+    <div class="section-header"><h2>My Profile</h2></div>
+    <div id="profile-content"></div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ─────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────── */
+const SUPABASE_URL = "https://gsneugdwoxpibajghwge.supabase.co";
+const SUPABASE_KEY = "sb_publishable_bbsF43-TXGgEumRGflGf5A_apC1dP3T";
+const MAPBOX_TOKEN = "pk.eyJ1IjoicGx1c2gtaW50ZW50aW9ucyIsImEiOiJjbXA5ejJlcGwwMzQxMnJwdXBpZTg5NmYxIn0.i0wFsO5_bt70k942AsMNcg";
+
+/* ─────────────────────────────────────────
+   GLOBALS
+───────────────────────────────────────── */
+let sb, map, currentUser, techRecord;
+let meMarker = null;
+let jobMarkers = [];
+let watchId = null;
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+window.addEventListener("load", async () => {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  feather.replace();
+
+  const { data: { session } } = await sb.auth.getSession();
+
+  setTimeout(() => {
+    document.getElementById("loader").style.display = "none";
+  }, 1600);
+
+  if (session) {
+    currentUser = session.user;
+    await bootApp();
+  }
+  // else: login screen stays visible
+});
+
+/* ─────────────────────────────────────────
+   LOGIN
+───────────────────────────────────────── */
+async function doLogin() {
+  const email = document.getElementById("login-email").value.trim();
+  const pass  = document.getElementById("login-password").value;
+  const errEl = document.getElementById("login-error");
+  errEl.style.display = "none";
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+  if (error) {
+    errEl.style.display = "block";
+    return;
+  }
+
+  currentUser = data.user;
+  await bootApp();
+}
+
+/* ─────────────────────────────────────────
+   BOOT APP AFTER AUTH
+───────────────────────────────────────── */
+async function bootApp() {
+  // Hide login, show shell
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("sidebar").classList.remove("hidden");
+  document.getElementById("topbar").classList.remove("hidden");
+  document.getElementById("main-panel").classList.remove("hidden");
+
+  // Fetch technician record
+  const { data } = await sb
+    .from("technicians")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  techRecord = data;
+
+  // Populate badge
+  const name = techRecord?.name || currentUser.email;
+  document.getElementById("tech-name").textContent = name;
+  document.getElementById("tech-avatar").textContent = name.charAt(0).toUpperCase();
+
+  // Greeting
+  updateGreeting(name);
+
+  // Init map
+  initMap();
+
+  // Start GPS tracking
+  startGPS();
+
+  // Load jobs
+  await loadJobs();
+
+  // Re-run feather for dynamically added icons
+  feather.replace();
+}
+
+/* ─────────────────────────────────────────
+   LOGOUT
+───────────────────────────────────────── */
+async function doLogout() {
+  if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+  await sb.auth.signOut();
+  location.reload();
+}
+
+/* ─────────────────────────────────────────
+   GREETING
+───────────────────────────────────────── */
+function updateGreeting(name) {
+  const now  = new Date();
+  const hour = now.getHours();
+  const part = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+  const date = now.toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric"
+  });
+  document.getElementById("greeting").textContent =
+    `Good ${part}, ${name.split(" ")[0]}. It's ${date}.`;
+}
+
+/* ─────────────────────────────────────────
+   MAP
+───────────────────────────────────────── */
+function initMap() {
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  map = new mapboxgl.Map({
+    container: "map",
+    style: "mapbox://styles/mapbox/dark-v11",
+    center: [-84.56, 39.92],
+    zoom: 12
+  });
+  map.on("load", () => map.resize());
+  map.addControl(new mapboxgl.NavigationControl(), "top-right");
+}
+
+/* ─────────────────────────────────────────
+   GPS TRACKING
+───────────────────────────────────────── */
+function startGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById("gps-label").textContent = "GPS: Not supported";
+    return;
+  }
+
+  watchId = navigator.geolocation.watchPosition(
+    async (pos) => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      document.getElementById("gps-dot").classList.add("active");
+      document.getElementById("gps-label").textContent = "GPS: Live ✓";
+
+      // Update marker on map
+      if (!meMarker) {
+        const el = document.createElement("div");
+        el.className = "me-marker";
+        meMarker = new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map);
+      } else {
+        meMarker.setLngLat([lng, lat]);
+      }
+
+      map.easeTo({ center: [lng, lat], duration: 800 });
+
+      // Push to Supabase
+      if (techRecord) {
+        await sb.from("technicians")
+          .update({ lat, lng, last_seen: new Date().toISOString() })
+          .eq("user_id", currentUser.id);
+      }
+    },
+    (err) => {
+      console.warn("GPS error:", err.message);
+      document.getElementById("gps-label").textContent = "GPS: Unavailable";
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+  );
+}
+
+/* ─────────────────────────────────────────
+   LOAD JOBS
+───────────────────────────────────────── */
+async function loadJobs() {
+  if (!techRecord) return;
+
+  const { data, error } = await sb
+    .from("jobs")
+    .select(`
+      id, title, status, created_at, start_time, completed_time,
+      clients ( name, address, phone, lat, lng )
+    `)
+    .eq("technician_id", techRecord.user_id)
+    .order("created_at", { ascending: false });
+
+  if (error) { console.error("Jobs error:", error); return; }
+
+  const active    = data.filter(j => j.status === "active");
+  const completed = data.filter(j => j.status === "completed");
+
+  document.getElementById("active-count").textContent    = active.length;
+  document.getElementById("completed-count").textContent = completed.length;
+
+  renderActiveJobs(active);
+  renderCompletedJobs(completed);
+  plotJobsOnMap(active);
+  renderProfile();
+}
+
+/* ─────────────────────────────────────────
+   RENDER ACTIVE JOBS
+───────────────────────────────────────── */
+function renderActiveJobs(jobs) {
+  const el = document.getElementById("active-list");
+  el.innerHTML = "";
+
+  if (!jobs.length) {
+    el.innerHTML = `<div class="empty-state"><i data-feather="briefcase"></i><p>No active jobs right now</p></div>`;
+    feather.replace(); return;
+  }
+
+  jobs.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "job-card";
+    card.innerHTML = `
+      <span class="status-pill status-active">● Active</span>
+      <h3>${job.title || "Untitled Job"}</h3>
+      <div class="job-meta">
+        <div class="job-meta-item"><strong>Client</strong><br>${job.clients?.name || "N/A"}</div>
+        <div class="job-meta-item"><strong>Address</strong><br>${job.clients?.address || "N/A"}</div>
+        <div class="job-meta-item"><strong>Phone</strong><br>${job.clients?.phone || "N/A"}</div>
+        <div class="job-meta-item"><strong>Started</strong><br>${job.start_time ? formatDate(job.start_time) : "Pending"}</div>
+      </div>
+      <div class="job-actions">
+        <button class="btn-action btn-complete" onclick="markComplete('${job.id}')">
+          ✓ Mark Complete
+        </button>
+        ${job.clients?.address ? `<button class="btn-action btn-map" onclick="openDirections('${encodeURIComponent(job.clients.address)}')">
+          🗺 Directions
+        </button>` : ""}
+      </div>
+    `;
+    el.appendChild(card);
+  });
+  feather.replace();
+}
+
+/* ─────────────────────────────────────────
+   RENDER COMPLETED JOBS
+───────────────────────────────────────── */
+function renderCompletedJobs(jobs) {
+  const el = document.getElementById("completed-list");
+  el.innerHTML = "";
+
+  if (!jobs.length) {
+    el.innerHTML = `<div class="empty-state"><i data-feather="check-circle"></i><p>No completed jobs yet</p></div>`;
+    feather.replace(); return;
+  }
+
+  jobs.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "job-card";
+    card.innerHTML = `
+      <span class="status-pill status-completed">✓ Completed</span>
+      <h3>${job.title || "Untitled Job"}</h3>
+      <div class="job-meta">
+        <div class="job-meta-item"><strong>Client</strong><br>${job.clients?.name || "N/A"}</div>
+        <div class="job-meta-item"><strong>Address</strong><br>${job.clients?.address || "N/A"}</div>
+        <div class="job-meta-item"><strong>Started</strong><br>${job.start_time ? formatDate(job.start_time) : "—"}</div>
+        <div class="job-meta-item"><strong>Completed</strong><br>${job.completed_time ? formatDate(job.completed_time) : "—"}</div>
+      </div>
+    `;
+    el.appendChild(card);
+  });
+  feather.replace();
+}
+
+/* ─────────────────────────────────────────
+   PLOT JOB PINS ON MAP
+───────────────────────────────────────── */
+function plotJobsOnMap(jobs) {
+  // Clear old markers
+  jobMarkers.forEach(m => m.remove());
+  jobMarkers = [];
+
+  jobs.forEach(job => {
+    if (!job.clients?.lat || !job.clients?.lng) return;
+    const el = document.createElement("div");
+    el.className = "job-marker";
+    el.title = job.clients?.name || job.title;
+
+    const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
+      <strong style="color:#111">${job.title}</strong><br/>
+      <span style="color:#555;font-size:12px">${job.clients?.name}</span><br/>
+      <span style="color:#555;font-size:12px">${job.clients?.address}</span>
+    `);
+
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([job.clients.lng, job.clients.lat])
+      .setPopup(popup)
+      .addTo(map);
+
+    jobMarkers.push(marker);
+  });
+}
+
+/* ─────────────────────────────────────────
+   MARK COMPLETE
+───────────────────────────────────────── */
+async function markComplete(jobId) {
+  const { error } = await sb.from("jobs")
+    .update({ status: "completed", completed_time: new Date().toISOString() })
+    .eq("id", jobId);
+
+  if (error) { showToast("❌ Failed to update job."); return; }
+
+  showToast("✅ Job marked as complete!");
+  await loadJobs();
+}
+
+/* ─────────────────────────────────────────
+   DIRECTIONS
+───────────────────────────────────────── */
+function openDirections(address) {
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${address}`, "_blank");
+}
+
+/* ─────────────────────────────────────────
+   PROFILE
+───────────────────────────────────────── */
+function renderProfile() {
+  const el = document.getElementById("profile-content");
+  if (!techRecord) { el.innerHTML = "<p>Loading…</p>"; return; }
+
+  el.innerHTML = `
+    <div class="profile-grid">
+      <div class="profile-field">
+        <label>Full Name</label>
+        <span>${techRecord.name || "—"}</span>
+      </div>
+      <div class="profile-field">
+        <label>Email</label>
+        <span>${currentUser.email}</span>
+      </div>
+      <div class="profile-field">
+        <label>Phone</label>
+        <span>${techRecord.phone || "—"}</span>
+      </div>
+      <div class="profile-field">
+        <label>Status</label>
+        <span>${techRecord.status || "Active"}</span>
+      </div>
+      <div class="profile-field">
+        <label>Member Since</label>
+        <span>${techRecord.created_at ? formatDate(techRecord.created_at) : "—"}</span>
+      </div>
+      <div class="profile-field">
+        <label>Last Seen</label>
+        <span>${techRecord.last_seen ? formatDate(techRecord.last_seen) : "—"}</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ─────────────────────────────────────────
+   PANEL SWITCHING
+───────────────────────────────────────── */
+function showPanel(panelId) {
+  const all = ["map-panel","active-panel","completed-panel","profile-panel"];
+  all.forEach(id => document.getElementById(id).classList.add("hidden"));
+  document.getElementById(panelId).classList.remove("hidden");
+
+  // Update nav active state
+  const navMap = {
+    "map-panel":"nav-map","active-panel":"nav-active",
+    "completed-panel":"nav-completed","profile-panel":"nav-profile"
+  };
+  document.querySelectorAll(".sidebar a").forEach(a => a.classList.remove("active"));
+  const navEl = document.getElementById(navMap[panelId]);
+  if (navEl) navEl.classList.add("active");
+
+  if (panelId === "map-panel" && map) {
+    setTimeout(() => map.resize(), 200);
+  }
+}
+
+/* ─────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────── */
+function formatDate(iso) {
+  return new Date(iso).toLocaleString("en-US", {
+    month: "short", day: "numeric",
+    year: "numeric", hour: "2-digit", minute: "2-digit"
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// Allow login on Enter key
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !document.getElementById("login-screen").classList.contains("hidden")) {
+    doLogin();
+  }
+});
+</script>
+</body>
+</html>
