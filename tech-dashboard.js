@@ -665,3 +665,16 @@ function showToast(msg) {
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
+
+if (!data) {
+  await sb.from("technicians").insert({
+    user_id: currentUser.id,
+    email: currentUser.email,
+    full_name: currentUser.email,
+    status: "pending_documents",
+    role: "technician"
+  });
+
+  return bootApp();
+}
+
