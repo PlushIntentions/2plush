@@ -28,7 +28,7 @@ window.addEventListener("load", async () => {
   const { data: session } = await sb.auth.getSession();
 
   if (!session || !session.session) {
-    window.location.href = "/login.html";
+    window.location.href = "/index.html";
     return;
   }
 
