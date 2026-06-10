@@ -142,7 +142,7 @@ async function loadJobs() {
     .from("jobs")
     .select(`
       *,
-      clients (name, address, lat, lng)
+      clients (name, address)
     `)
     .eq("tech_id", techRecord.id)
     .order("start_time", { ascending: true });
