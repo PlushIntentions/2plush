@@ -658,7 +658,7 @@ async function bootApp() {
     .from("technicians")
     .select("*")
     .eq("user_id", currentUser.id)
-    .single();
+    .maybeSingle();
 
   // FIXED — this block belongs here
   if (!data) {
