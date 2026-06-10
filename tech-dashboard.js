@@ -1,3 +1,10 @@
+document.addEventListener("DOMContentLoaded", () => {
+  bootApp();
+});
+
+
+
+
 // ============================
 // SUPABASE CLIENT + GLOBALS
 // ============================
