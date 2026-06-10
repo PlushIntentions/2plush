@@ -6,21 +6,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentTech = null;
 let currentJob = null;
 
-// ---------- AUTH ----------
-document.getElementById('login-btn').addEventListener('click', async () => {
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) {
-    document.getElementById('login-error').textContent = error.message;
-    return;
-  }
-
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('app-shell').classList.remove('hidden');
-  await initTechPortal();
-});
 
 document.getElementById('signout-btn').addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
