@@ -2,340 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Technician Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
-
-  <style>
-    body {
-      margin: 0;
-      background: #0b0e14;
-      color: #fff;
-      font-family: system-ui, sans-serif;
-    }
-
-    nav {
-      display: flex;
-      justify-content: space-around;
-      background: #111827;
-      padding: 12px;
-      border-bottom: 1px solid #1f2937;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    nav button {
-      background: none;
-      border: none;
-      color: #9ca3af;
-      font-size: 1rem;
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-
-    nav button.active {
-      color: #3b82f6;
-      border-bottom: 2px solid #3b82f6;
-    }
-
-    .page {
-      display: none;
-      padding: 16px;
-    }
-
-    .page.active {
-      display: block;
-    }
-
-    .job-card {
-      background: #1f2937;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-
-    .earnings-box {
-      background: #1f2937;
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-    }
-
-    .earnings-value {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #3b82f6;
-    }
-
-    #mapbox {
-      width: 100%;
-      height: 70vh;
-      border-radius: 12px;
-      margin-top: 12px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plush Intentions – Tech Portal</title>
+  <link rel="stylesheet" href="tech.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
 
-  <nav>
-    <button onclick="showPage('dashboard')" id="nav-dashboard" class="active">Dashboard</button>
-    <button onclick="showPage('assigned')" id="nav-assigned">Assigned</button>
-    <button onclick="showPage('available')" id="nav-available">Available</button>
-    <button onclick="showPage('earnings')" id="nav-earnings">Earnings</button>
-    <button onclick="showPage('map')" id="nav-map">Map</button>
-  </nav>
-
-  <!-- DASHBOARD HOME -->
-  <div id="dashboard" class="page active">
-    <h2>Welcome Technician</h2>
-    <p>Your live job updates will appear here.</p>
-  </div>
-
-  <!-- ASSIGNED JOBS -->
-  <div id="assigned" class="page">
-    <h2>Assigned Jobs</h2>
-    <div id="assignedJobs"></div>
-  </div>
-
-  <!-- AVAILABLE JOBS -->
-  <div id="available" class="page">
-    <h2>Available Jobs</h2>
-    <div id="unassignedJobs"></div>
-  </div>
-
-  <!-- EARNINGS PAGE -->
-  <div id="earnings" class="page">
-    <h2>Your Earnings</h2>
-
-    <div class="earnings-box">
-      <p>Today</p>
-      <div class="earnings-value" id="earningsToday">$0.00</div>
-    </div>
-
-    <div class="earnings-box">
-      <p>This Week</p>
-      <div class="earnings-value" id="earningsWeek">$0.00</div>
-    </div>
-
-    <div class="earnings-box">
-      <p>This Month</p>
-      <div class="earnings-value" id="earningsMonth">$0.00</div>
+  <!-- AUTH -->
+  <div id="auth-screen">
+    <div class="glass-card auth-card">
+      <h1>Technician Login</h1>
+      <input type="email" id="login-email" placeholder="Email" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button id="login-btn">Sign In</button>
+      <div id="login-error" class="error-text"></div>
     </div>
   </div>
 
-  <!-- MAP PAGE -->
-  <div id="map" class="page">
-    <h2>Technician Map</h2>
-    <div id="mapbox"></div>
-  </div>
+  <!-- APP SHELL -->
+  <div id="app-shell" class="hidden">
 
-  <!-- LIBRARIES -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></
+    <!-- TOPBAR -->
+    <header class="topbar glass-bar">
+      <div class="topbar-left">
+        <span id="tech-name">Technician</span>
+        <span class="status-pill" id="tech-status">Offline</span>
+      </div>
+      <div class="topbar-right">
+        <button id="clock-btn" class="btn-glass">Clock In</button>
+      </div>
+    </header>
 
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-script>
- <script src=/tech-dashboard.js"></script>
-  <!-- CLEAN FINAL DASHBOARD JS -->
-  <script>
-    // ============================
-    // SUPABASE CLIENT + GLOBALS
-    // ============================
-   
-    let mapLoaded = false;
+    <!-- MAIN -->
+    <main class="main-content">
 
-    // ============================
-    // PAGE NAVIGATION
-    // ============================
-    function showPage(page) {
-      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-      document.getElementById(page).classList.add("active");
-
-      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-      document.getElementById("nav-" + page).classList.add("active");
-
-      if (page === "map") loadMap();
-      if (page === "earnings") loadEarnings();
-    }
-
-    // ============================
-    // BOOT APP
-    // ============================
-    async function bootApp() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return alert("Not logged in");
-
-      TECH_ID = user.id;
-
-      loadAssignedJobs();
-      loadUnassignedJobs();
-      subscribeToJobChanges();
-    }
-
-    // ============================
-    // LOAD ASSIGNED JOBS
-    // ============================
-    async function loadAssignedJobs() {
-      const { data } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("assigned_to", TECH_ID);
-
-      const container = document.getElementById("assignedJobs");
-      container.innerHTML = "";
-
-      data?.forEach(job => {
-        container.innerHTML += `
-          <div class="job-card">
-            <h3>${job.title}</h3>
-            <p>${job.description}</p>
-            <button onclick="checkIn(${job.id})">Check In</button>
-            <button onclick="completeJob(${job.id})">Complete</button>
+      <!-- HOME -->
+      <section class="panel active" id="panel-home">
+        <div class="glass-grid">
+          <div class="glass-card">
+            <h2>Today</h2>
+            <p id="home-summary">Loading…</p>
           </div>
-        `;
-      });
-    }
-
-    // ============================
-    // LOAD AVAILABLE JOBS
-    // ============================
-    async function loadUnassignedJobs() {
-      const { data } = await supabase
-        .from("jobs")
-        .select("*")
-        .is("assigned_to", null);
-
-      const container = document.getElementById("unassignedJobs");
-      container.innerHTML = "";
-
-      data?.forEach(job => {
-        container.innerHTML += `
-          <div class="job-card">
-            <h3>${job.title}</h3>
-            <p>${job.description}</p>
-            <button onclick="acceptJob(${job.id})">Accept</button>
-            <button onclick="declineJob(${job.id})">Decline</button>
+          <div class="glass-card">
+            <h3>Current Job</h3>
+            <div id="current-job">No active job</div>
           </div>
-        `;
-      });
-    }
+        </div>
+      </section>
 
-    // ============================
-    // ACCEPT JOB
-    // ============================
-    async function acceptJob(jobId) {
-      await supabase.from("jobs").update({
-        assigned_to: TECH_ID,
-        status: "accepted"
-      }).eq("id", jobId);
+      <!-- ASSIGNED JOBS -->
+      <section class="panel" id="panel-jobs">
+        <h2>My Jobs</h2>
+        <div id="jobs-list" class="glass-list"></div>
+      </section>
 
-      await supabase.from("job_requests").insert({
-        job_id: jobId,
-        technician_id: TECH_ID
-      });
+      <!-- UNASSIGNED -->
+      <section class="panel" id="panel-unassigned">
+        <h2>Unassigned Work Orders</h2>
+        <div id="unassigned-list" class="glass-list"></div>
+      </section>
 
-      loadAssignedJobs();
-      loadUnassignedJobs();
-    }
+      <!-- JOB DETAIL -->
+      <section class="panel" id="panel-job-detail">
+        <button class="btn-link" id="back-to-jobs">&larr; Back</button>
+        <div class="glass-card" id="job-detail-card"></div>
+      </section>
 
-    // ============================
-    // DECLINE JOB
-    // ============================
-    async function declineJob(jobId) {
-      await supabase.from("job_declines").insert({
-        job_id: jobId,
-        technician_id: TECH_ID
-      });
+      <!-- EARNINGS -->
+      <section class="panel" id="panel-earnings">
+        <h2>Earnings & Hours</h2>
+        <div class="glass-grid">
+          <div class="glass-card">
+            <h3>Total Earnings</h3>
+            <div id="earn-total">$0.00</div>
+          </div>
+          <div class="glass-card">
+            <h3>Total Hours</h3>
+            <div id="earn-hours">0h 0m</div>
+          </div>
+          <div class="glass-card">
+            <h3>Completed Jobs</h3>
+            <div id="earn-count">0</div>
+          </div>
+        </div>
+        <div class="glass-card">
+          <h3>Per Job</h3>
+          <div id="earnings-list" class="glass-list"></div>
+        </div>
+      </section>
 
-      loadUnassignedJobs();
-    }
+      <!-- INFRACTIONS -->
+      <section class="panel" id="panel-infractions">
+        <h2>Infractions</h2>
+        <div id="infractions-list" class="glass-list"></div>
+      </section>
 
-    // ============================
-    // CHECK-IN / COMPLETE
-    // ============================
-    async function checkIn(jobId) {
-      await supabase.from("jobs").update({
-        status: "in_progress",
-        check_in_time: new Date().toISOString()
-      }).eq("id", jobId);
+      <!-- PROFILE -->
+      <section class="panel" id="panel-profile">
+        <h2>Profile</h2>
+        <div class="glass-card">
+          <p id="profile-email"></p>
+          <button id="signout-btn" class="btn-glass">Sign Out</button>
+        </div>
+      </section>
 
-      loadAssignedJobs();
-    }
+    </main>
 
-    async function completeJob(jobId) {
-      await supabase.from("jobs").update({
-        status: "completed",
-        completed_time: new Date().toISOString()
-      }).eq("id", jobId);
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav glass-bar">
+      <button data-target="home" class="nav-btn active">Home</button>
+      <button data-target="jobs" class="nav-btn">Jobs</button>
+      <button data-target="unassigned" class="nav-btn">Unassigned</button>
+      <button data-target="earnings" class="nav-btn">Earnings</button>
+      <button data-target="profile" class="nav-btn">Profile</button>
+    </nav>
 
-      loadAssignedJobs();
-    }
+  </div>
 
-    // ============================
-    // REAL-TIME JOB UPDATES
-    // ============================
-    function subscribeToJobChanges() {
-      supabase
-        .channel("jobs")
-        .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, () => {
-          loadAssignedJobs();
-          loadUnassignedJobs();
-        })
-        .subscribe();
-    }
+  <!-- SIGNATURE MODAL -->
+  <div id="signature-modal" class="modal hidden">
+    <div class="modal-content glass-card">
+      <h3>Manager on Duty Signature</h3>
+      <canvas id="signature-pad"></canvas>
+      <div class="modal-actions">
+        <button id="sig-clear">Clear</button>
+        <button id="sig-save">Save</button>
+        <button id="sig-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
 
-    // ============================
-    // EARNINGS CALCULATION
-    // ============================
-    async function loadEarnings() {
-      const { data } = await supabase
-        .from("jobs")
-        .select("price, completed_time")
-        .eq("assigned_to", TECH_ID)
-        .eq("status", "completed");
+  <!-- SIMPLE TOAST -->
+  <div id="toast"></div>
 
-      let today = 0, week = 0, month = 0;
-      const now = new Date();
-
-      data?.forEach(job => {
-        const completed = new Date(job.completed_time);
-        if (!job.price) return;
-
-        if (completed.toDateString() === now.toDateString()) today += job.price;
-        if (completed >= new Date(now - 7 * 86400000)) week += job.price;
-        if (completed.getMonth() === now.getMonth()) month += job.price;
-      });
-
-      document.getElementById("earningsToday").innerText = `$${today.toFixed(2)}`;
-      document.getElementById("earningsWeek").innerText = `$${week.toFixed(2)}`;
-      document.getElementById("earningsMonth").innerText = `$${month.toFixed(2)}`;
-    }
-
-    // ============================
-    // MAPBOX MAP
-    // ============================
-    function loadMap() {
-      if (mapLoaded) return;
-
-      mapboxgl.accessToken = "pk.eyJ1IjoicGx1c2gtaW50ZW50aW9ucyIsImEiOiJjbXA5ejJlcGwwMzQxMnJwdXBpZTg5NmYxIn0.i0wFsO5_bt70k942AsMNcg";
-
-      const map = new mapboxgl.Map({
-        container: "mapbox",
-        style: "mapbox://styles/mapbox/dark-v11",
-        center: [-82.18, 41.45],
-        zoom: 10
-      });
-
-      mapLoaded = true;
-    }
-
-    // ============================
-    // START APP
-    // ============================
-    bootApp();
-  </script>
-
+  <script src="tech.js"></script>
 </body>
 </html>
