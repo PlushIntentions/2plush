@@ -144,7 +144,7 @@ async function loadJobs() {
       *,
       clients (name, address)
     `)
-    .eq("tech_id", techRecord.id)
+    .eq("technician_id", techRecord.id)
     .order("start_time", { ascending: true });
 
   if (error) {
@@ -415,7 +415,7 @@ function closeFilesPanel() {
 async function recordFileDownload(jobId, fileName) {
   await sb.from("jobs_files_downloads").insert({
     job_id: jobId,
-    tech_id: currentUser.id,
+    technician_id: currentUser.id,
     file_name: fileName,
     downloaded_at: new Date().toISOString()
   });
@@ -444,7 +444,7 @@ async function checkFileReminder(job) {
     .from("jobs_file_reminders")
     .select("*")
     .eq("job_id", job.id)
-    .eq("tech_id", currentUser.id)
+    .eq("technician_id", currentUser.id)
     .maybeSingle();
 
   if (reminded) return;
@@ -513,7 +513,7 @@ async function loadUnassignedJobs() {
       *,
       clients (name, address)
     `)
-    .is("tech_id", null)
+    .is("technician_id", null)
     .eq("status", "unassigned");
 
   const el = document.getElementById("unassigned-list");
@@ -560,7 +560,7 @@ async function requestWorkOrder(jobId) {
     .from("job_requests")
     .insert({
       job_id: jobId,
-      tech_id: techRecord.id
+      technician_id: techRecord.id
     });
 
   if (error) {
@@ -580,7 +580,7 @@ async function getDeclineCounts() {
   const { data, error } = await sb
     .from("job_declines")
     .select("declined_at")
-    .eq("tech_id", techRecord.id);
+    .eq("technician_id", techRecord.id);
 
   if (error || !data) return { weekCount: 0, sixtyCount: 0 };
 
@@ -639,7 +639,7 @@ async function confirmDecline() {
 
   await sb.from("job_declines").insert({
     job_id: jobId,
-    tech_id: techRecord.id
+    technician_id: techRecord.id
   });
 
   await sb.from("jobs")
