@@ -1,190 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Plush Intentions Technician Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>Technician Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- Mapbox -->
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #05060a;
+      --card-bg: #11131a;
+      --accent: #3b82f6;
+      --accent-soft: #1d4ed8;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
 
-<!-- Feather Icons -->
-<script src="https://unpkg.com/feather-icons"></script>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
 
-<!-- Technician Dashboard CSS -->
-<link rel="stylesheet" href="technician-dashboard.css?v=5" />
+    body {
+      background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
 
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      letter-spacing: 0.03em;
+    }
+
+    header .status-pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    section {
+      background: linear-gradient(145deg, #020617, #0b1120);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+    }
+
+    section h2 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    section h2 span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    #loader {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .job-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .job-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .job-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .job-status {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--muted);
+    }
+
+    .job-status.completed {
+      border-color: rgba(34, 197, 94, 0.6);
+      color: var(--success);
+    }
+
+    .job-status.in_progress {
+      border-color: rgba(59, 130, 246, 0.6);
+      color: var(--accent);
+    }
+
+    .job-body {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .job-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #0b1120;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
+    }
+
+    button.primary:hover {
+      background: var(--accent-soft);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--muted);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    button.secondary:hover {
+      background: rgba(30, 64, 175, 0.35);
+      transform: translateY(-1px);
+    }
+
+    button.danger {
+      background: rgba(127, 29, 29, 0.9);
+      color: #fee2e2;
+      border: 1px solid rgba(248, 113, 113, 0.7);
+    }
+
+    button.danger:hover {
+      background: rgba(185, 28, 28, 0.95);
+      transform: translateY(-1px);
+    }
+
+    .empty {
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding: 8px 4px;
+    }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <header>
+      <h1>Technician Dashboard</h1>
+      <div class="status-pill">
+        Logged in as technician • Live jobs
+      </div>
+    </header>
 
-<!-- LOADER -->
-<div id="loader" class="loader hidden">
-  <div class="spinner"></div>
-</div>
+    <div id="loader">
+      Loading jobs…
+    </div>
 
-<!-- MAIN DASHBOARD -->
-<div id="main-panel" class="main-panel glass hidden">
+    <div class="grid">
+      <!-- Assigned jobs -->
+      <section>
+        <h2>
+          Assigned Jobs
+          <span>Jobs currently assigned to you</span>
+        </h2>
+        <div id="assignedJobs" class="job-list"></div>
+      </section>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar glass">
-    <div class="brand">Plush Intentions</div>
-    <a id="nav-map" onclick="showPanel('map-panel')">Map</a>
-    <a id="nav-active" onclick="showPanel('active-panel')">Active Jobs</a>
-    <a id="nav-completed" onclick="showPanel('completed-panel')">Completed</a>
-    <a id="nav-unassigned" onclick="showPanel('unassigned-panel')">Unassigned Jobs</a>
-    <a id="nav-profile" onclick="showPanel('profile-panel')">Profile</a>
-  </div>
-
-  <!-- TOP BAR -->
-  <div class="topbar glass">
-    Technician Dashboard
-  </div>
-
-  <!-- MAP PANEL -->
-  <div id="map-panel" class="panel">
-    <div id="map"></div>
-  </div>
-
-  <!-- ACTIVE JOBS PANEL -->
-  <div id="active-panel" class="panel hidden">
-    <h2>Active Jobs</h2>
-    <div id="active-list"></div>
-  </div>
-
-  <!-- COMPLETED JOBS PANEL -->
-  <div id="completed-panel" class="panel hidden">
-    <h2>Completed Jobs</h2>
-    <div id="completed-list"></div>
-  </div>
-
-  <!-- UNASSIGNED JOBS PANEL -->
-  <div id="unassigned-panel" class="panel hidden">
-    <h2>Unassigned Jobs</h2>
-    <div id="unassigned-list"></div>
-  </div>
-
-  <!-- PROFILE PANEL -->
-  <div id="profile-panel" class="panel hidden">
-    <h2>Your Profile</h2>
-    <div id="profile-content"></div>
-  </div>
-
-  <!-- ONBOARDING PANEL -->
-  <div id="onboarding-panel" class="panel hidden">
-    <div class="login-card glass" style="max-width:420px;margin:40px auto;">
-      <img src="logo.png" />
-      <h2>Complete Your Onboarding</h2>
-
-      <label>MSA</label>
-      <input type="file" id="doc-msa" />
-
-      <label>NDA</label>
-      <input type="file" id="doc-nda" />
-
-      <label>W‑9</label>
-      <input type="file" id="doc-w9" />
-
-      <label>Government ID</label>
-      <input type="file" id="doc-id" />
-
-      <button class="btn-brand" onclick="uploadAllDocuments()">Submit Documents</button>
+      <!-- Unassigned jobs -->
+      <section>
+        <h2>
+          Available Jobs
+          <span>Jobs you can accept or decline</span>
+        </h2>
+        <div id="unassignedJobs" class="job-list"></div>
+      </section>
     </div>
   </div>
 
-  <!-- APPROVAL PANEL -->
-  <div id="approval-panel" class="panel hidden">
-    <div class="login-card glass" style="max-width:420px;margin:40px auto;">
-      <img src="logo.png" />
-      <h2>Documents Submitted</h2>
-      <p>Your documents are under review.</p>
-    </div>
-  </div>
-
-  <!-- SIGN-OUT SHEET PANEL -->
-  <div id="signout-panel" class="panel hidden">
-    <div style="display:flex;justify-content:flex-end;">
-      <button class="close-btn" onclick="cancelSignOutUpload()">✕</button>
-    </div>
-
-    <h2>Complete Work Order</h2>
-
-    <label>Sign‑Out Sheet</label>
-    <input type="file" id="signout-file" />
-
-    <label>Manager on Duty Name</label>
-    <input type="text" id="manager-name" />
-
-    <label>Technician Performance</label>
-    <select id="tech-rating">
-      <option value="">Select</option>
-      <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
-      <option value="4">⭐⭐⭐⭐ Good</option>
-      <option value="3">⭐⭐⭐ Average</option>
-      <option value="2">⭐⭐ Poor</option>
-      <option value="1">⭐ Very Poor</option>
-    </select>
-
-    <label>Satisfied?</label>
-    <select id="satisfied">
-      <option value="">Select</option>
-      <option value="yes">Yes</option>
-      <option value="no">No</option>
-    </select>
-
-    <label>System Working?</label>
-    <select id="system-working">
-      <option value="">Select</option>
-      <option value="yes">Yes</option>
-      <option value="no">No</option>
-    </select>
-
-    <label>Notes</label>
-    <textarea id="completion-notes"></textarea>
-
-    <button class="btn-brand" onclick="submitSignOutSheet()">Submit Completion</button>
-  </div>
-
-  <!-- FILES PANEL -->
-  <div id="files-panel" class="panel hidden">
-    <div style="display:flex;justify-content:flex-end;">
-      <button class="close-btn" onclick="closeFilesPanel()">✕</button>
-    </div>
-
-    <h2>Work Order Files</h2>
-    <div id="files-list"></div>
-  </div>
-
-</div>
-
-<!-- TOAST -->
-<div id="toast"></div>
-
-<!-- DECLINE WARNING MODAL -->
-<div id="decline-modal" class="modal hidden">
-  <div class="modal-backdrop" onclick="closeDeclineModal()"></div>
-  <div class="modal-card glass">
-    <h3>Declining Work Orders</h3>
-    <p id="decline-modal-text"></p>
-    <div class="modal-actions">
-      <button class="btn-action" onclick="closeDeclineModal()">Cancel</button>
-      <button class="btn-brand" onclick="confirmDecline()">Confirm Decline</button>
-    </div>
-  </div>
-</div>
-
-<!-- Mapbox -->
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-
-
-<!-- Feather Icons Init -->
-<script>
-  feather.replace();
-</script>
-
+  <!-- Your tech dashboard JS (the one we already wrote) -->
+  <script src="/js/tech-dashboard.js"></script>
 </body>
 </html>
