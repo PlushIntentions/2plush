@@ -666,6 +666,13 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
+
+const { data, error } = await sb
+  .from("technicians")
+  .select("*")
+  .eq("user_id", currentUser.id)
+  .single();
+
 if (!data) {
   await sb.from("technicians").insert({
     user_id: currentUser.id,
@@ -677,4 +684,3 @@ if (!data) {
 
   return bootApp();
 }
-
