@@ -651,36 +651,49 @@ async function confirmDecline() {
   loadUnassignedJobs();
 }
 
-/* UTIL: FORMAT DATE */
-function formatDate(value) {
-  if (!value) return "—";
-  const d = new Date(value);
-  return d.toLocaleString();
-}
+async function bootApp() {
+  document.getElementById("loader").classList.remove("hidden");
 
-/* TOAST */
-function showToast(msg) {
-  const toast = document.getElementById("toast");
-  toast.textContent = msg;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3000);
-}
+  const { data, error } = await sb
+    .from("technicians")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .single();
 
+  // FIXED — this block belongs here
+  if (!data) {
+    await sb.from("technicians").insert({
+      user_id: currentUser.id,
+      email: currentUser.email,
+      full_name: currentUser.email,
+      status: "pending_documents",
+      role: "technician"
+    });
 
-const { data, error } = await sb
-  .from("technicians")
-  .select("*")
-  .eq("user_id", currentUser.id)
-  .single();
+    return bootApp();
+  }
 
-if (!data) {
-  await sb.from("technicians").insert({
-    user_id: currentUser.id,
-    email: currentUser.email,
-    full_name: currentUser.email,
-    status: "pending_documents",
-    role: "technician"
-  });
+  techRecord = data;
 
-  return bootApp();
+  document.getElementById("main-panel").classList.remove("hidden");
+
+  if (techRecord.status === "pending_documents") {
+    showOnboardingPanel();
+    document.getElementById("loader").classList.add("hidden");
+    return;
+  }
+
+  if (techRecord.status === "pending_approval") {
+    showApprovalPanel();
+    document.getElementById("loader").classList.add("hidden");
+    return;
+  }
+
+  await initMap();
+  await loadJobs();
+  await loadUnassignedJobs();
+  renderProfile();
+  showPanel("map-panel");
+
+  document.getElementById("loader").classList.add("hidden");
 }
