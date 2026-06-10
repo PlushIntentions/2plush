@@ -1,92 +1,98 @@
-
-// ===============================
-// TECH DASHBOARD (FINAL VERSION)
-// ===============================
-
-// Supabase client
+// ============================
+// SUPABASE CLIENT + GLOBALS
+// ============================
 const supabase = window.supabase.createClient(
   "https://iazvpykfdckpffhakncd.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhenZweWtmZGNrcGZmaGFrbmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzA0MTEsImV4cCI6MjA5NTg0NjQxMX0.OOXhS1zLez30isOszxP0XOIyndpJq2jwqE90eY649bA"
 );
 
-// Global state
-let TECH_ID = null; // technicians.user_id (UUID)
-let CURRENT_JOBS = [];
-let UNASSIGNED_JOBS = [];
+let TECH_ID = null;
+let mapLoaded = false;
 
-// ===============================
+// ============================
+// PAGE NAVIGATION
+// ============================
+function showPage(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  document.getElementById("nav-" + page).classList.add("active");
+
+  if (page === "map") loadMap();
+  if (page === "earnings") loadEarnings();
+}
+
+// ============================
 // BOOT APP
-// ===============================
+// ============================
 async function bootApp() {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return redirectToLogin();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return alert("Not logged in");
 
-    TECH_ID = user.id; // matches technicians.user_id
+  TECH_ID = user.id;
 
-    await Promise.all([
-      loadAssignedJobs(),
-      loadUnassignedJobs(),
-      subscribeToJobChanges()
-    ]);
-
-    hideLoader();
-  } catch (err) {
-    console.error("Boot error:", err);
-  }
+  loadAssignedJobs();
+  loadUnassignedJobs();
+  subscribeToJobChanges();
 }
 
-// ===============================
+// ============================
 // LOAD ASSIGNED JOBS
-// ===============================
+// ============================
 async function loadAssignedJobs() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("jobs")
     .select("*")
-    .eq("assigned_to", TECH_ID)
-    .order("created_at", { ascending: false });
+    .eq("assigned_to", TECH_ID);
 
-  if (error) {
-    console.error("loadAssignedJobs error:", error);
-    return;
-  }
+  const container = document.getElementById("assignedJobs");
+  container.innerHTML = "";
 
-  CURRENT_JOBS = data || [];
-  renderAssignedJobs();
+  data?.forEach(job => {
+    container.innerHTML += `
+      <div class="job-card">
+        <h3>${job.title}</h3>
+        <p>${job.description}</p>
+        <button onclick="checkIn(${job.id})">Check In</button>
+        <button onclick="completeJob(${job.id})">Complete</button>
+      </div>
+    `;
+  });
 }
 
-// ===============================
-// LOAD UNASSIGNED JOBS
-// ===============================
+// ============================
+// LOAD AVAILABLE JOBS
+// ============================
 async function loadUnassignedJobs() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("jobs")
     .select("*")
-    .is("assigned_to", null)
-    .order("created_at", { ascending: false });
+    .is("assigned_to", null);
 
-  if (error) {
-    console.error("loadUnassignedJobs error:", error);
-    return;
-  }
+  const container = document.getElementById("unassignedJobs");
+  container.innerHTML = "";
 
-  UNASSIGNED_JOBS = data || [];
-  renderUnassignedJobs();
+  data?.forEach(job => {
+    container.innerHTML += `
+      <div class="job-card">
+        <h3>${job.title}</h3>
+        <p>${job.description}</p>
+        <button onclick="acceptJob(${job.id})">Accept</button>
+        <button onclick="declineJob(${job.id})">Decline</button>
+      </div>
+    `;
+  });
 }
 
-// ===============================
+// ============================
 // ACCEPT JOB
-// ===============================
+// ============================
 async function acceptJob(jobId) {
-  const { error } = await supabase
-    .from("jobs")
-    .update({ assigned_to: TECH_ID, status: "accepted" })
-    .eq("id", jobId);
-
-  if (error) {
-    console.error("acceptJob error:", error);
-    return;
-  }
+  await supabase.from("jobs").update({
+    assigned_to: TECH_ID,
+    status: "accepted"
+  }).eq("id", jobId);
 
   await supabase.from("job_requests").insert({
     job_id: jobId,
@@ -97,9 +103,9 @@ async function acceptJob(jobId) {
   loadUnassignedJobs();
 }
 
-// ===============================
+// ============================
 // DECLINE JOB
-// ===============================
+// ============================
 async function declineJob(jobId) {
   await supabase.from("job_declines").insert({
     job_id: jobId,
@@ -109,117 +115,86 @@ async function declineJob(jobId) {
   loadUnassignedJobs();
 }
 
-// ===============================
-// CHECK-IN
-// ===============================
+// ============================
+// CHECK-IN / COMPLETE
+// ============================
 async function checkIn(jobId) {
-  const { error } = await supabase
-    .from("jobs")
-    .update({
-      check_in_time: new Date().toISOString(),
-      status: "in_progress"
-    })
-    .eq("id", jobId);
+  await supabase.from("jobs").update({
+    status: "in_progress",
+    check_in_time: new Date().toISOString()
+  }).eq("id", jobId);
 
-  if (error) console.error("checkIn error:", error);
   loadAssignedJobs();
 }
 
-// ===============================
-// CHECK-OUT / COMPLETE JOB
-// ===============================
 async function completeJob(jobId) {
-  const { error } = await supabase
-    .from("jobs")
-    .update({
-      completed_time: new Date().toISOString(),
-      status: "completed"
-    })
-    .eq("id", jobId);
+  await supabase.from("jobs").update({
+    status: "completed",
+    completed_time: new Date().toISOString()
+  }).eq("id", jobId);
 
-  if (error) console.error("completeJob error:", error);
   loadAssignedJobs();
 }
 
-// ===============================
-// FILE DOWNLOAD TRACKING
-// ===============================
-async function trackFileDownload(jobId, fileName) {
-  await supabase.from("jobs_files_downloads").insert({
-    job_id: jobId,
-    technician_id: TECH_ID,
-    file_name: fileName
-  });
-}
-
-// ===============================
-// REAL-TIME SUBSCRIPTIONS
-// ===============================
+// ============================
+// REAL-TIME JOB UPDATES
+// ============================
 function subscribeToJobChanges() {
   supabase
-    .channel("jobs_changes")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "jobs" },
-      () => {
-        loadAssignedJobs();
-        loadUnassignedJobs();
-      }
-    )
+    .channel("jobs")
+    .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, () => {
+      loadAssignedJobs();
+      loadUnassignedJobs();
+    })
     .subscribe();
 }
 
-// ===============================
-// RENDER ASSIGNED JOBS
-// ===============================
-function renderAssignedJobs() {
-  const container = document.getElementById("assignedJobs");
-  container.innerHTML = "";
+// ============================
+// EARNINGS CALCULATION
+// ============================
+async function loadEarnings() {
+  const { data } = await supabase
+    .from("jobs")
+    .select("price, completed_time")
+    .eq("assigned_to", TECH_ID)
+    .eq("status", "completed");
 
-  CURRENT_JOBS.forEach(job => {
-    container.innerHTML += `
-      <div class="job-card">
-        <h3>${job.title}</h3>
-        <p>${job.description}</p>
-        <p>Status: ${job.status}</p>
+  let today = 0, week = 0, month = 0;
+  const now = new Date();
 
-        <button onclick="checkIn(${job.id})">Check In</button>
-        <button onclick="completeJob(${job.id})">Complete</button>
-      </div>
-    `;
+  data?.forEach(job => {
+    const completed = new Date(job.completed_time);
+    if (!job.price) return;
+
+    if (completed.toDateString() === now.toDateString()) today += job.price;
+    if (completed >= new Date(now - 7 * 86400000)) week += job.price;
+    if (completed.getMonth() === now.getMonth()) month += job.price;
   });
+
+  document.getElementById("earningsToday").innerText = `$${today.toFixed(2)}`;
+  document.getElementById("earningsWeek").innerText = `$${week.toFixed(2)}`;
+  document.getElementById("earningsMonth").innerText = `$${month.toFixed(2)}`;
 }
 
-// ===============================
-// RENDER UNASSIGNED JOBS
-// ===============================
-function renderUnassignedJobs() {
-  const container = document.getElementById("unassignedJobs");
-  container.innerHTML = "";
+// ============================
+// MAPBOX MAP
+// ============================
+function loadMap() {
+  if (mapLoaded) return;
 
-  UNASSIGNED_JOBS.forEach(job => {
-    container.innerHTML += `
-      <div class="job-card">
-        <h3>${job.title}</h3>
-        <p>${job.description}</p>
+  mapboxgl.accessToken = "pk.eyJ1IjoicGx1c2gtaW50ZW50aW9ucyIsImEiOiJjbXA5ejJlcGwwMzQxMnJwdXBpZTg5NmYxIn0.i0wFsO5_bt70k942AsMNcg";
 
-        <button onclick="acceptJob(${job.id})">Accept</button>
-        <button onclick="declineJob(${job.id})">Decline</button>
-      </div>
-    `;
+  const map = new mapboxgl.Map({
+    container: "mapbox",
+    style: "mapbox://styles/mapbox/dark-v11",
+    center: [-82.18, 41.45],
+    zoom: 10
   });
+
+  mapLoaded = true;
 }
 
-// ===============================
-// HELPERS
-// ===============================
-function hideLoader() {
-  document.getElementById("loader").style.display = "none";
-}
-
-function redirectToLogin() {
-  window.location.href = "/login";
-}
-
-// Start app
+// ============================
+// START APP
+// ============================
 bootApp();
