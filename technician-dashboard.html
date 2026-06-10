@@ -5,246 +5,336 @@
   <title>Technician Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+
   <style>
-    :root {
-      --bg: #05060a;
-      --card-bg: #11131a;
-      --accent: #3b82f6;
-      --accent-soft: #1d4ed8;
-      --text: #f9fafb;
-      --muted: #9ca3af;
-      --danger: #ef4444;
-      --success: #22c55e;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
     body {
-      background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
-      color: var(--text);
-      min-height: 100vh;
+      margin: 0;
+      background: #0b0e14;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background: #111827;
+      padding: 12px;
+      border-bottom: 1px solid #1f2937;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 1rem;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    nav button.active {
+      color: #3b82f6;
+      border-bottom: 2px solid #3b82f6;
+    }
+
+    .page {
+      display: none;
       padding: 16px;
     }
 
-    .app {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    header h1 {
-      font-size: 1.4rem;
-      letter-spacing: 0.03em;
-    }
-
-    header .status-pill {
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.5);
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 16px;
-    }
-
-    @media (max-width: 800px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    section {
-      background: linear-gradient(145deg, #020617, #0b1120);
-      border-radius: 16px;
-      padding: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
-    }
-
-    section h2 {
-      font-size: 1rem;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    section h2 span {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-    }
-
-    #loader {
-      text-align: center;
-      padding: 20px 0;
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
-
-    .job-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 6px;
-      max-height: 70vh;
-      overflow-y: auto;
-      padding-right: 4px;
+    .page.active {
+      display: block;
     }
 
     .job-card {
-      background: var(--card-bg);
+      background: #1f2937;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    #map {
+      width: 100%;
+      height: 70vh;
       border-radius: 12px;
-      padding: 10px 12px;
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      margin-top: 12px;
     }
 
-    .job-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
+    .earnings-box {
+      background: #1f2937;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
     }
 
-    .job-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-
-    .job-status {
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      color: var(--muted);
-    }
-
-    .job-status.completed {
-      border-color: rgba(34, 197, 94, 0.6);
-      color: var(--success);
-    }
-
-    .job-status.in_progress {
-      border-color: rgba(59, 130, 246, 0.6);
-      color: var(--accent);
-    }
-
-    .job-body {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .job-footer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
-    button {
-      border: none;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease;
-    }
-
-    button.primary {
-      background: var(--accent);
-      color: #0b1120;
-      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
-    }
-
-    button.primary:hover {
-      background: var(--accent-soft);
-      transform: translateY(-1px);
-    }
-
-    button.secondary {
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--muted);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-    }
-
-    button.secondary:hover {
-      background: rgba(30, 64, 175, 0.35);
-      transform: translateY(-1px);
-    }
-
-    button.danger {
-      background: rgba(127, 29, 29, 0.9);
-      color: #fee2e2;
-      border: 1px solid rgba(248, 113, 113, 0.7);
-    }
-
-    button.danger:hover {
-      background: rgba(185, 28, 28, 0.95);
-      transform: translateY(-1px);
-    }
-
-    .empty {
-      font-size: 0.8rem;
-      color: var(--muted);
-      padding: 8px 4px;
+    .earnings-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #3b82f6;
     }
   </style>
 </head>
-<body>
-  <div class="app">
-    <header>
-      <h1>Technician Dashboard</h1>
-      <div class="status-pill">
-        Logged in as technician • Live jobs
-      </div>
-    </header>
 
-    <div id="loader">
-      Loading jobs…
+<body>
+
+  <nav>
+    <button onclick="showPage('dashboard')" id="nav-dashboard" class="active">Dashboard</button>
+    <button onclick="showPage('assigned')" id="nav-assigned">Assigned</button>
+    <button onclick="showPage('available')" id="nav-available">Available</button>
+    <button onclick="showPage('earnings')" id="nav-earnings">Earnings</button>
+    <button onclick="showPage('map')" id="nav-map">Map</button>
+  </nav>
+
+  <!-- DASHBOARD HOME -->
+  <div id="dashboard" class="page active">
+    <h2>Welcome Technician</h2>
+    <p>Your live job updates will appear here.</p>
+  </div>
+
+  <!-- ASSIGNED JOBS -->
+  <div id="assigned" class="page">
+    <h2>Assigned Jobs</h2>
+    <div id="assignedJobs"></div>
+  </div>
+
+  <!-- AVAILABLE JOBS -->
+  <div id="available" class="page">
+    <h2>Available Jobs</h2>
+    <div id="unassignedJobs"></div>
+  </div>
+
+  <!-- EARNINGS PAGE -->
+  <div id="earnings" class="page">
+    <h2>Your Earnings</h2>
+
+    <div class="earnings-box">
+      <p>Today</p>
+      <div class="earnings-value" id="earningsToday">$0.00</div>
     </div>
 
-    <div class="grid">
-      <!-- Assigned jobs -->
-      <section>
-        <h2>
-          Assigned Jobs
-          <span>Jobs currently assigned to you</span>
-        </h2>
-        <div id="assignedJobs" class="job-list"></div>
-      </section>
+    <div class="earnings-box">
+      <p>This Week</p>
+      <div class="earnings-value" id="earningsWeek">$0.00</div>
+    </div>
 
-      <!-- Unassigned jobs -->
-      <section>
-        <h2>
-          Available Jobs
-          <span>Jobs you can accept or decline</span>
-        </h2>
-        <div id="unassignedJobs" class="job-list"></div>
-      </section>
+    <div class="earnings-box">
+      <p>This Month</p>
+      <div class="earnings-value" id="earningsMonth">$0.00</div>
     </div>
   </div>
 
-  <!-- Your tech dashboard JS (the one we already wrote) -->
-  <script src="/tech-dashboard.js"></script>
+  <!-- MAP PAGE -->
+  <div id="map" class="page">
+    <h2>Technician Map</h2>
+    <div id="mapbox" style="height:70vh; border-radius:12px;"></div>
+  </div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <script>
+    // ============================
+    // SUPABASE CLIENT
+    // ============================
+    const supabase = window.supabase.createClient(
+      "https://YOUR_PROJECT.supabase.co",
+      "YOUR_PUBLIC_ANON_KEY"
+    );
+
+    let TECH_ID = null;
+
+    // ============================
+    // PAGE NAVIGATION
+    // ============================
+    function showPage(page) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(page).classList.add("active");
+
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+      document.getElementById("nav-" + page).classList.add("active");
+
+      if (page === "map") loadMap();
+      if (page === "earnings") loadEarnings();
+    }
+
+    // ============================
+    // BOOT APP
+    // ============================
+    async function bootApp() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return alert("Not logged in");
+
+      TECH_ID = user.id;
+
+      loadAssignedJobs();
+      loadUnassignedJobs();
+      subscribeToJobChanges();
+    }
+
+    // ============================
+    // LOAD ASSIGNED JOBS
+    // ============================
+    async function loadAssignedJobs() {
+      const { data } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("assigned_to", TECH_ID);
+
+      const container = document.getElementById("assignedJobs");
+      container.innerHTML = "";
+
+      data?.forEach(job => {
+        container.innerHTML += `
+          <div class="job-card">
+            <h3>${job.title}</h3>
+            <p>${job.description}</p>
+            <button onclick="checkIn(${job.id})">Check In</button>
+            <button onclick="completeJob(${job.id})">Complete</button>
+          </div>
+        `;
+      });
+    }
+
+    // ============================
+    // LOAD AVAILABLE JOBS
+    // ============================
+    async function loadUnassignedJobs() {
+      const { data } = await supabase
+        .from("jobs")
+        .select("*")
+        .is("assigned_to", null);
+
+      const container = document.getElementById("unassignedJobs");
+      container.innerHTML = "";
+
+      data?.forEach(job => {
+        container.innerHTML += `
+          <div class="job-card">
+            <h3>${job.title}</h3>
+            <p>${job.description}</p>
+            <button onclick="acceptJob(${job.id})">Accept</button>
+            <button onclick="declineJob(${job.id})">Decline</button>
+          </div>
+        `;
+      });
+    }
+
+    // ============================
+    // ACCEPT JOB
+    // ============================
+    async function acceptJob(jobId) {
+      await supabase.from("jobs").update({
+        assigned_to: TECH_ID,
+        status: "accepted"
+      }).eq("id", jobId);
+
+      await supabase.from("job_requests").insert({
+        job_id: jobId,
+        technician_id: TECH_ID
+      });
+
+      loadAssignedJobs();
+      loadUnassignedJobs();
+    }
+
+    // ============================
+    // DECLINE JOB
+    // ============================
+    async function declineJob(jobId) {
+      await supabase.from("job_declines").insert({
+        job_id: jobId,
+        technician_id: TECH_ID
+      });
+
+      loadUnassignedJobs();
+    }
+
+    // ============================
+    // CHECK-IN / COMPLETE
+    // ============================
+    async function checkIn(jobId) {
+      await supabase.from("jobs").update({
+        status: "in_progress",
+        check_in_time: new Date().toISOString()
+      }).eq("id", jobId);
+
+      loadAssignedJobs();
+    }
+
+    async function completeJob(jobId) {
+      await supabase.from("jobs").update({
+        status: "completed",
+        completed_time: new Date().toISOString()
+      }).eq("id", jobId);
+
+      loadAssignedJobs();
+    }
+
+    // ============================
+    // REAL-TIME JOB UPDATES
+    // ============================
+    function subscribeToJobChanges() {
+      supabase
+        .channel("jobs")
+        .on("postgres_changes", { event: "*", schema: "public", table: "jobs" }, () => {
+          loadAssignedJobs();
+          loadUnassignedJobs();
+        })
+        .subscribe();
+    }
+
+    // ============================
+    // EARNINGS CALCULATION
+    // ============================
+    async function loadEarnings() {
+      const { data } = await supabase
+        .from("jobs")
+        .select("price, completed_time")
+        .eq("assigned_to", TECH_ID)
+        .eq("status", "completed");
+
+      let today = 0, week = 0, month = 0;
+      const now = new Date();
+
+      data?.forEach(job => {
+        const completed = new Date(job.completed_time);
+        if (!job.price) return;
+
+        if (completed.toDateString() === now.toDateString()) today += job.price;
+        if (completed >= new Date(now - 7 * 86400000)) week += job.price;
+        if (completed.getMonth() === now.getMonth()) month += job.price;
+      });
+
+      document.getElementById("earningsToday").innerText = `$${today.toFixed(2)}`;
+      document.getElementById("earningsWeek").innerText = `$${week.toFixed(2)}`;
+      document.getElementById("earningsMonth").innerText = `$${month.toFixed(2)}`;
+    }
+
+    // ============================
+    // MAPBOX MAP
+    // ============================
+    let mapLoaded = false;
+
+    function loadMap() {
+      if (mapLoaded) return;
+
+      mapboxgl.accessToken = "pk.eyJPLACEHOLDER_MAPBOX_TOKEN";
+
+      const map = new mapboxgl.Map({
+        container: "mapbox",
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [-82.18, 41.45], // Lorain, OH default
+        zoom: 10
+      });
+
+      mapLoaded = true;
+    }
+
+    bootApp();
+  </script>
+
 </body>
 </html>
