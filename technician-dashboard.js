@@ -374,30 +374,44 @@ async function checkIn(jobId) {
 }
 
 async function loadActiveJobs() {
-  const { data, error } = await sb.from("jobs").select("*").eq("status", "in_progress");
-  if (error) console.error(error);
-  // logic to render jobs to the UI goes here
-}
-
-async function checkIn(jobId) {
   try {
-    const timestamp = new Date().toISOString();
     const { data, error } = await sb
       .from("jobs")
-      .update({ status: "in_progress", check_in_time: timestamp })
-      .eq("id", jobId);
+      .select("*")
+      .eq("status", "in_progress")
+      .order("check_in_time", { ascending: false });
 
     if (error) throw error;
 
-    showToast("Clock-in recorded.");
-    // This will now work because the function is defined
-    loadActiveJobs(); 
-    openPanel("active-panel");
+    const container = document.getElementById("active-list");
+    container.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      container.innerHTML = "<p>No active jobs.</p>";
+      return;
+    }
+
+    data.forEach(job => {
+      const card = document.createElement("div");
+      card.className = "job-card";
+
+      card.innerHTML = `
+        <h3>${job.title}</h3>
+        <p>${job.address}</p>
+        <p><strong>Clock-in:</strong> ${job.check_in_time || "Not recorded"}</p>
+        <button class="btn" onclick="openJobFiles(${job.id})">Files</button>
+        <button class="btn" onclick="openSignout(${job.id})">Complete Job</button>
+      `;
+
+      container.appendChild(card);
+    });
+
   } catch (err) {
     console.error(err);
-    showToast("Clock-in failed.");
+    showToast("Failed to load active jobs.");
   }
 }
+
 
 function openPanel(panelId) {
   const panels = document.querySelectorAll('.dashboard-panel'); // Adjust selector to match your HTML
