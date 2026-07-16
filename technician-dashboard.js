@@ -304,7 +304,7 @@ function renderUnassignedJobs(jobs) {
   el.innerHTML = "";
 
   if (!jobs.length) {
-    el.innerHTML = `<p>No available jobs</p>`;
+    el.innerHTML = "<p>No available jobs right now.</p>";
     return;
   }
 
@@ -316,11 +316,15 @@ function renderUnassignedJobs(jobs) {
       <h3>${job.title}</h3>
       <p><strong>Client:</strong> ${job.clients?.name}</p>
       <p><strong>Address:</strong> ${job.clients?.address}</p>
+
+      <button class="btn btn-primary" onclick="requestJob('${job.id}')">Request</button>
+      <button class="btn btn-secondary" onclick="declineJob('${job.id}')">Decline</button>
     `;
 
     el.appendChild(card);
   });
 }
+
 
 /* FILES PANEL */
 function showFilesPanel(jobId) {
