@@ -255,7 +255,7 @@ function renderActiveJobs(jobs) {
 
       <button onclick="checkIn('${job.id}')">Check In</button>
       <button onclick="markComplete('${job.id}')">Complete</button>
-      <button onclick="openFilesPanel('${job.id}')">Files</button>
+      <button onclick="openFilesPanel('${jobId}')">Files</button>
     `;
 
     el.appendChild(card);
