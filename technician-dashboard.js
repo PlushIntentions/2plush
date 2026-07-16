@@ -1,9 +1,17 @@
 /****************************************************
- * HYBRID PANEL SYSTEM (AUTO-DETECT)
+ * PANEL SYSTEM — SHOWPANEL ONLY
  ****************************************************/
-function switchPanel(panelId) {
-  if (typeof openPanel === "function") openPanel(panelId);
-  if (typeof showPanel === "function") showPanel(panelId);
+function showPanel(panelId) {
+  document.querySelectorAll(".panel").forEach(p => {
+    p.classList.add("hidden");
+  });
+
+  const target = document.getElementById(panelId);
+  if (target) {
+    target.classList.remove("hidden");
+  } else {
+    console.error("Panel not found:", panelId);
+  }
 }
 
 /****************************************************
@@ -115,7 +123,7 @@ async function checkIn(jobId) {
 
     showToast("Clock-in recorded.");
     loadJobs();
-    switchPanel("active-panel");
+    showPanel("active-panel");
 
   } catch (err) {
     console.error(err);
@@ -129,7 +137,7 @@ async function checkIn(jobId) {
 function openJobFiles(jobId) {
   currentJobForFiles = jobId;
   loadJobFiles(jobId);
-  switchPanel("files-panel");
+  showPanel("files-panel");
 }
 
 async function loadJobFiles(jobId) {
@@ -189,7 +197,7 @@ async function submitJobFiles() {
 
     showToast("Files uploaded.");
     loadJobFiles(currentJobForFiles);
-    switchPanel("active-panel");
+    showPanel("active-panel");
 
   } catch (err) {
     console.error(err);
@@ -199,7 +207,7 @@ async function submitJobFiles() {
 
 function closeFilesPanel() {
   currentJobForFiles = null;
-  switchPanel("active-panel");
+  showPanel("active-panel");
 }
 
 /****************************************************
@@ -207,7 +215,7 @@ function closeFilesPanel() {
  ****************************************************/
 function markComplete(jobId) {
   currentJobForSignout = jobId;
-  switchPanel("signout-panel");
+  showPanel("signout-panel");
 }
 
 async function uploadSignoutFile(file) {
@@ -259,7 +267,7 @@ async function submitSignOutUpload() {
     currentJobForSignout = null;
 
     loadJobs();
-    switchPanel("active-panel");
+    showPanel("active-panel");
 
   } catch (err) {
     console.error(err);
@@ -269,11 +277,11 @@ async function submitSignOutUpload() {
 
 function cancelSignOutUpload() {
   currentJobForSignout = null;
-  switchPanel("active-panel");
+  showPanel("active-panel");
 }
 
 /****************************************************
- * MAP WORKFLOW (map-panel)
+ * MAP WORKFLOW — USING #map-panel
  ****************************************************/
 let map;
 let jobMarkers = [];
