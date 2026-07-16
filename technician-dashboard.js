@@ -348,3 +348,27 @@ function showToast(msg) {
 
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
+
+async function checkIn(jobId) {
+  try {
+    const timestamp = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from("jobs")
+      .update({
+        status: "in_progress",
+        check_in_time: timestamp
+      })
+      .eq("id", jobId);
+
+    if (error) throw error;
+
+    showToast("Clock-in recorded.");
+    loadActiveJobs();
+    openPanel("active-panel");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Clock-in failed.");
+  }
+}
