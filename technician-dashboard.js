@@ -466,20 +466,38 @@ function openPanel(panelId) {
 
 async function requestJob(jobId) {
   try {
-    const { error } = await sb
+    // Fetch current requested_by array
+    const { data: job, error: fetchError } = await sb
+      .from("jobs")
+      .select("requested_by")
+      .eq("id", jobId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    let requestedBy = job?.requested_by || [];
+
+    // Prevent duplicate requests
+    if (!requestedBy.includes(techRecord.id)) {
+      requestedBy.push(techRecord.id);
+    }
+
+    // Update job with new requested_by array
+    const { error: updateError } = await sb
       .from("jobs")
       .update({
         request_status: "requested",
-        requested_by: techRecord.id
+        requested_by: requestedBy
       })
       .eq("id", jobId);
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
     showToast("Job request submitted.");
 
-    await loadUnassignedJobs(); // job stays visible
-    await loadJobs();           // tech sees it in their “Requested” list if you add one
+    // Refresh lists
+    await loadUnassignedJobs();
+    await loadJobs();
 
   } catch (err) {
     console.error(err);
