@@ -1,8 +1,165 @@
+/* Root + base */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --pink:      #FF4F9F;
+  --pink-dim:  rgba(255,79,159,.18);
+  --pink-glow: rgba(255,79,159,.45);
+  --glass-bg:  rgba(18,10,30,.62);
+  --glass-brd: rgba(255,255,255,.09);
+  --text:      #f0eaf8;
+  --text-muted:#a090b8;
+  --green:     #3dffa0;
+  --yellow:    #ffd84f;
+  --blue:      #4fa8ff;
+  --red:       #ff5252;
+  --sidebar-w: 260px;
+  --top-h:     56px;
+  --radius:    14px;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  overflow: auto !important; /* FIXED */
+}
+
+body {
+  background: url('background.png') center / cover no-repeat fixed;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(8,4,20,.55);
+  z-index: 0;
+}
+
+/* Loader */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8,4,20,.92);
+  backdrop-filter: blur(12px);
+  gap: 24px;
+  transition: opacity .4s ease;
+}
+#loader.hidden { opacity: 0; pointer-events: none; }
+
+/* Toast */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  color: var(--text);
+  padding: 12px 24px;
+  border-radius: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 9000;
+  transition: transform .3s ease, opacity .3s ease;
+  opacity: 0;
+  backdrop-filter: blur(14px);
+  white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* Main area FIXED */
+.main-area {
+  position: relative !important; /* FIXED */
+  width: 100% !important;        /* FIXED */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+/* Panels FIXED */
 .panel {
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: block !important; /* FIXED */
 }
-#main-panel {
-  display: block !important;
+
+.panel.hidden {
+  display: none !important; /* FIXED */
 }
+
+/* Map panel */
+#map-panel {
+  padding: 0;
+  position: relative;
+}
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+}
+.btn-primary {
+  background: var(--pink);
+  color: #fff;
+}
+.btn-secondary {
+  background: var(--glass-bg);
+  color: var(--text-muted);
+}
+
+/* Job cards */
+.job-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(14px);
+}
+
+/* Files panel */
+#files-panel button {
+  margin-top: 12px;
+}
+
+/* Signout panel */
+#signout-panel input {
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* Onboarding panel */
+#onboarding-panel label {
+  display: block;
+  margin-top: 12px;
+}
+#onboarding-panel input {
+  margin-bottom: 12px;
+}
+
+/* Profile */
+#profile-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,79,159,.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--pink); }
