@@ -447,4 +447,4 @@ function openPanel(panelId) {
   } else {
     console.error("Panel not found:", panelId);
   }
-}
+
