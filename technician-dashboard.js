@@ -136,6 +136,18 @@ async function bootApp() {
     document.getElementById("loader").classList.add("hidden");
     return;
   }
+ if (techRecord.status === "approved") {
+    await initMap();
+    await loadJobs();
+    await loadUnassignedJobs();
+    renderProfile();
+
+    showPanel("map-panel");
+    highlightNav("nav-map");
+
+    document.getElementById("loader").classList.add("hidden");
+    return;
+}
 
   await initMap();
   await loadJobs();
