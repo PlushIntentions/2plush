@@ -1,3 +1,4 @@
+console.log("Technician dashboard JS is running.");
 
 
 document.addEventListener("DOMContentLoaded", () => {
