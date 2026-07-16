@@ -16,98 +16,127 @@
 
 <body>
 
+  <!-- SIDEBAR -->
+  <div class="sidebar glass" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <img src="logo.png" alt="Logo">
+        <div>
+          <div class="brand-title">Technician Dashboard</div>
+          <div class="brand-sub">Plush Intentions</div>
+        </div>
+      </div>
+      <button class="sidebar-close-btn" id="sidebar-close">✕</button>
+    </div>
+
+    <div class="sidebar-stats">
+      <div class="ss-card pink">
+        <div class="val" id="stat-active">0</div>
+        <div class="lbl">Active</div>
+      </div>
+      <div class="ss-card blue">
+        <div class="val" id="stat-completed">0</div>
+        <div class="lbl">Completed</div>
+      </div>
+    </div>
+
+    <div class="nav-section">Navigation</div>
+
+    <div class="nav-link" id="nav-map">🗺️ <span>Map</span></div>
+    <div class="nav-link" id="nav-active">🔧 <span>Active Jobs</span></div>
+    <div class="nav-link" id="nav-completed">✔️ <span>Completed Jobs</span></div>
+    <div class="nav-link" id="nav-unassigned">📦 <span>Available Jobs</span></div>
+    <div class="nav-link" id="nav-profile">👤 <span>Profile</span></div>
+
+    <div class="sidebar-footer">
+      <div class="signed-in-email" id="signed-in-email"></div>
+      <button class="btn-signout" id="btn-signout">🚪 Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MOBILE BACKDROP -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <button class="hamburger" id="sidebar-open">☰</button>
+      <div class="topbar-title">Technician Dashboard</div>
+      <button class="topbar-refresh" onclick="bootApp()">⟳</button>
+    </div>
+
+    <!-- PANELS -->
+    <div id="main-panel">
+
+      <div id="map-panel" class="panel hidden">
+        <h2>Job Map</h2>
+        <div id="map"></div>
+      </div>
+
+      <div id="active-panel" class="panel hidden">
+        <h2>Active Jobs</h2>
+        <div id="active-list"></div>
+      </div>
+
+      <div id="completed-panel" class="panel hidden">
+        <h2>Completed Jobs</h2>
+        <div id="completed-list"></div>
+      </div>
+
+      <div id="unassigned-panel" class="panel hidden">
+        <h2>Available Jobs</h2>
+        <div id="unassigned-list"></div>
+      </div>
+
+      <div id="files-panel" class="panel hidden">
+        <h2>Job Files</h2>
+        <div id="files-list"></div>
+        <button onclick="closeFilesPanel()" class="btn">Close</button>
+      </div>
+
+      <div id="signout-panel" class="panel hidden">
+        <h2>Complete Job</h2>
+        <p>Upload your sign-out photos:</p>
+        <input type="file" id="signout-photo-1">
+        <input type="file" id="signout-photo-2">
+        <button onclick="submitSignOutUpload()" class="btn btn-primary">Submit</button>
+        <button onclick="cancelSignOutUpload()" class="btn btn-secondary">Cancel</button>
+      </div>
+
+      <div id="onboarding-panel" class="panel hidden">
+        <h2>Upload Required Documents</h2>
+        <label>MSA</label><input type="file" id="doc-msa">
+        <label>NDA</label><input type="file" id="doc-nda">
+        <label>W9</label><input type="file" id="doc-w9">
+        <label>ID</label><input type="file" id="doc-id">
+        <button onclick="uploadAllDocuments()" class="btn btn-primary">Submit Documents</button>
+      </div>
+
+      <div id="approval-panel" class="panel hidden">
+        <h2>Pending Approval</h2>
+        <p>Your documents have been submitted. Please wait for admin approval.</p>
+      </div>
+
+      <div id="profile-panel" class="panel hidden">
+        <h2>Your Profile</h2>
+        <div id="profile-content"></div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- LOADER -->
   <div id="loader" class="loader hidden">
     <div class="spinner"></div>
     <p>Loading...</p>
   </div>
 
-  <!-- MAIN PANEL WRAPPER -->
-  <div id="main-panel" class="hidden">
-
-    <!-- MAP PANEL -->
-    <div id="map-panel" class="panel hidden">
-      <h2>Job Map</h2>
-      <div id="map" class="map-container"></div>
-    </div>
-
-    <!-- ACTIVE JOBS PANEL -->
-    <div id="active-panel" class="panel hidden">
-      <h2>Active Jobs</h2>
-      <div id="active-list"></div>
-    </div>
-
-    <!-- COMPLETED JOBS PANEL -->
-    <div id="completed-panel" class="panel hidden">
-      <h2>Completed Jobs</h2>
-      <div id="completed-list"></div>
-    </div>
-
-    <!-- UNASSIGNED JOBS PANEL -->
-    <div id="unassigned-panel" class="panel hidden">
-      <h2>Available Jobs</h2>
-      <div id="unassigned-list"></div>
-    </div>
-
-    <!-- FILES PANEL -->
-    <div id="files-panel" class="panel hidden">
-      <h2>Job Files</h2>
-      <div id="files-list"></div>
-      <button onclick="closeFilesPanel()" class="btn">Close</button>
-    </div>
-
-    <!-- SIGNOUT PANEL -->
-    <div id="signout-panel" class="panel hidden">
-      <h2>Complete Job</h2>
-      <p>Upload your sign-out photos:</p>
-
-      <input type="file" id="signout-photo-1">
-      <input type="file" id="signout-photo-2">
-
-      <button onclick="submitSignOutUpload()" class="btn btn-primary">Submit</button>
-      <button onclick="cancelSignOutUpload()" class="btn btn-secondary">Cancel</button>
-    </div>
-
-    <!-- ONBOARDING PANEL -->
-    <div id="onboarding-panel" class="panel hidden">
-      <h2>Upload Required Documents</h2>
-
-      <label>MSA</label>
-      <input type="file" id="doc-msa">
-
-      <label>NDA</label>
-      <input type="file" id="doc-nda">
-
-      <label>W9</label>
-      <input type="file" id="doc-w9">
-
-      <label>ID</label>
-      <input type="file" id="doc-id">
-
-      <button onclick="uploadAllDocuments()" class="btn btn-primary">Submit Documents</button>
-    </div>
-
-    <!-- APPROVAL PANEL -->
-    <div id="approval-panel" class="panel hidden">
-      <h2>Pending Approval</h2>
-      <p>Your documents have been submitted. Please wait for admin approval.</p>
-    </div>
-
-    <!-- PROFILE PANEL -->
-    <div id="profile-panel" class="panel hidden">
-      <h2>Your Profile</h2>
-      <div id="profile-content"></div>
-    </div>
-
-  </div>
-
   <!-- TOAST -->
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast"></div>
 
   <!-- JS -->
-<script src="https://tech.plushintentions.work/technician-dashboard.js" defer></script>
-
-
+  <script src="https://tech.plushintentions.work/technician-dashboard.js" defer></script>
 
 </body>
-</html>
