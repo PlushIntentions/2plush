@@ -8,10 +8,12 @@ let currentTech = null;
 let currentJob = null;
 
 
-document.getElementById('signout-btn').addEventListener('click', async () => {
-  await supabaseClient.auth.signOut();
-  location.reload();
-});
+const signoutBtn = document.getElementById("signout-btn");
+if (signoutBtn) {
+  signoutBtn.addEventListener("click", () => {
+    // your logic
+  });
+}
 
 // ---------- INIT ----------
 async function initTechPortal() {
