@@ -1,6 +1,5 @@
 let sb;
-let map;
-let jobMarkers = [];
+
 let currentUser = null;
 let techRecord = null;
 let currentJobForSignout = null;
