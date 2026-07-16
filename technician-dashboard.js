@@ -299,24 +299,26 @@ function cancelSignOutUpload() {
 /****************************************************
  * MAP WORKFLOW — USING #map-panel
  ****************************************************/
+/****************************************************
+ * MAP WORKFLOW — MAPBOX VERSION
+ ****************************************************/
 let map;
 let jobMarkers = [];
 let techMarker;
 
 function initMap() {
-  const mapDiv = document.getElementById("map-panel");
+  mapboxgl.accessToken = "YOUR_MAPBOX_ACCESS_TOKEN";
 
-  if (!mapDiv) {
-    console.error("Map container #map-panel not found.");
-    return;
-  }
-
-  map = new google.maps.Map(mapDiv, {
-    center: { lat: 41.6528, lng: -83.5379 },
+  map = new mapboxgl.Map({
+    container: "map", // IMPORTANT: this is your inner div
+    style: "mapbox://styles/mapbox/streets-v11",
+    center: [-83.5379, 41.6528], // lng, lat
     zoom: 11
   });
 
-  trackTechnicianLocation();
+  map.on("load", () => {
+    trackTechnicianLocation();
+  });
 }
 
 function trackTechnicianLocation() {
@@ -326,49 +328,39 @@ function trackTechnicianLocation() {
     const { latitude, longitude } = pos.coords;
 
     if (!techMarker) {
-      techMarker = new google.maps.Marker({
-        position: { lat: latitude, lng: longitude },
-        map,
-        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-        title: "Your Location"
-      });
+      techMarker = new mapboxgl.Marker({ color: "blue" })
+        .setLngLat([longitude, latitude])
+        .addTo(map);
     } else {
-      techMarker.setPosition({ lat: latitude, lng: longitude });
+      techMarker.setLngLat([longitude, latitude]);
     }
   });
 }
 
 function plotJobsOnMap(jobs) {
-  jobMarkers.forEach(m => m.setMap(null));
+  jobMarkers.forEach(m => m.remove());
   jobMarkers = [];
 
   jobs.forEach(job => {
     if (!job.clients || !job.clients.lat) return;
 
-    const marker = new google.maps.Marker({
-      position: { lat: job.clients.lat, lng: job.clients.lng },
-      map,
-      title: job.title,
-      icon: getJobMarkerIcon(job.status)
-    });
+    const marker = new mapboxgl.Marker({
+      color:
+        job.status === "completed"
+          ? "green"
+          : job.status === "in_progress"
+          ? "yellow"
+          : "red"
+    })
+      .setLngLat([job.clients.lng, job.clients.lat])
+      .addTo(map);
 
-    marker.addListener("click", () => {
+    marker.getElement().addEventListener("click", () => {
       openJobFiles(job.id);
     });
 
     jobMarkers.push(marker);
   });
-}
-
-function getJobMarkerIcon(status) {
-  switch (status) {
-    case "in_progress":
-      return "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
-    case "completed":
-      return "https://maps.google.com/mapfiles/ms/icons/green-dot.png";
-    default:
-      return "https://maps.google.com/mapfiles/ms/icons/red-dot.png";
-  }
 }
 
 /****************************************************
