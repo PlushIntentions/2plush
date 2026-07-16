@@ -1,3 +1,17 @@
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Unhide all panels
+  document.querySelectorAll(".panel").forEach(p => p.classList.add("active"));
+
+  // Unhide sidebar
+  const sidebar = document.querySelector(".sidebar");
+  if (sidebar) sidebar.classList.add("open");
+
+  console.log("Forced unhide executed.");
+});
+
+
 // ---------- SUPABASE INIT ----------
 const SUPABASE_URL = 'https://iazvpykfdckpffhakncd.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhenZweWtmZGNrcGZmaGFrbmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzA0MTEsImV4cCI6MjA5NTg0NjQxMX0.OOXhS1zLez30isOszxP0XOIyndpJq2jwqE90eY649bA';
