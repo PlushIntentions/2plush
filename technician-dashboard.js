@@ -1,18 +1,3 @@
-console.log("Technician dashboard JS is running.");
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Unhide all panels
-  document.querySelectorAll(".panel").forEach(p => p.classList.add("active"));
-
-  // Unhide sidebar
-  const sidebar = document.querySelector(".sidebar");
-  if (sidebar) sidebar.classList.add("open");
-
-  console.log("Forced unhide executed.");
-});
-
-
 
 // ---------- SUPABASE INIT ----------
 const SUPABASE_URL = 'https://iazvpykfdckpffhakncd.supabase.co';
@@ -396,6 +381,28 @@ function showToast(msg) {
   t.style.display = 'block';
   setTimeout(() => { t.style.display = 'none'; }, 2000);
 }
+window.addEventListener("DOMContentLoaded", async () => {
+  console.log("Forced unhide executed.");
+
+  // Unhide everything
+  const mainPanel = document.getElementById("main-panel");
+  if (mainPanel) mainPanel.classList.remove("hidden");
+
+  document.querySelectorAll(".panel").forEach(p => {
+    p.classList.remove("hidden");
+    p.classList.add("active");
+  });
+
+  // Boot the app
+  try {
+    await bootApp();
+  } catch (err) {
+    console.error("BootApp failed:", err);
+  }
+});
+
+
+
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("Forced unhide executed.");
 
@@ -405,3 +412,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("BootApp failed:", err);
   }
 });
+ 
