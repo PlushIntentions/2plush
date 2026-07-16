@@ -2,16 +2,19 @@
  * PANEL SYSTEM — SHOWPANEL ONLY
  ****************************************************/
 function showPanel(panelId) {
+  // Hide all panels
   document.querySelectorAll(".panel").forEach(p => {
     p.classList.add("hidden");
   });
 
+  // Show the requested panel
   const target = document.getElementById(panelId);
-  if (target) {
-    target.classList.remove("hidden");
-  } else {
+  if (!target) {
     console.error("Panel not found:", panelId);
+    return;
   }
+
+  target.classList.remove("hidden");
 }
 
 /****************************************************
@@ -20,7 +23,6 @@ function showPanel(panelId) {
 let currentJobForFiles = null;
 let currentJobForSignout = null;
 let techRecord = null;
-let currentUser = null;
 
 /****************************************************
  * LOAD JOBS
@@ -288,7 +290,14 @@ let jobMarkers = [];
 let techMarker;
 
 function initMap() {
-  map = new google.maps.Map(document.getElementById("map-panel"), {
+  const mapDiv = document.getElementById("map-panel");
+
+  if (!mapDiv) {
+    console.error("Map container #map-panel not found.");
+    return;
+  }
+
+  map = new google.maps.Map(mapDiv, {
     center: { lat: 41.6528, lng: -83.5379 },
     zoom: 11
   });
