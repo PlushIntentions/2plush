@@ -399,4 +399,29 @@ async function checkIn(jobId) {
   }
 }
 
+function openPanel(panelId) {
+  const panels = document.querySelectorAll('.dashboard-panel'); // Adjust selector to match your HTML
+  panels.forEach(panel => {
+    panel.style.display = panel.id === panelId ? 'block' : 'none';
+  });
+}
+
+async function checkIn(jobId) {
+  try {
+    const timestamp = new Date().toISOString();
+    const { data, error } = await sb
+      .from("jobs")
+      .update({ status: "in_progress", check_in_time: timestamp })
+      .eq("id", jobId);
+
+    if (error) throw error;
+
+    showToast("Clock-in recorded.");
+    loadActiveJobs(); 
+    openPanel("active-panel");
+  } catch (err) {
+    console.error(err);
+    showToast("Clock-in failed.");
+  }
+}
 ﻿
