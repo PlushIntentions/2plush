@@ -489,6 +489,7 @@ async function requestJob(jobId, techId) {
   showToast("Request sent!", "success");
 }
 
+
     // Refresh lists
     await loadUnassignedJobs();
     await loadJobs();
