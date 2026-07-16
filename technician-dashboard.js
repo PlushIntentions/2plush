@@ -348,7 +348,7 @@ function cancelSignOutUpload() {
 function renderProfile() {
   const el = document.getElementById("profile-content");
   el.innerHTML = `
-    <p><strong>Name:</strong> ${techRecord.name}</p>
+    <p><strong>Name:</strong> ${techRecord.full_name}</p>
     <p><strong>Email:</strong> ${currentUser.email}</p>
     <p><strong>Status:</strong> ${techRecord.status}</p>
   `;
