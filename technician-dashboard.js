@@ -353,7 +353,7 @@ async function checkIn(jobId) {
   try {
     const timestamp = new Date().toISOString();
 
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("jobs")
       .update({
         status: "in_progress",
