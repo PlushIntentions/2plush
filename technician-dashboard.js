@@ -439,3 +439,17 @@ async function checkIn(jobId) {
   }
 }
 ﻿
+function openPanel(panelId) {
+  // Hide all panels
+  document.querySelectorAll(".panel").forEach(p => {
+    p.classList.add("hidden");
+  });
+
+  // Show the selected panel
+  const target = document.getElementById(panelId);
+  if (target) {
+    target.classList.remove("hidden");
+  } else {
+    console.error("Panel not found:", panelId);
+  }
+}
