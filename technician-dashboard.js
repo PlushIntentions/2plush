@@ -367,3 +367,38 @@ function showToast(msg) {
 
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
+async function bootApp() {
+  showMainPanel();
+
+  // Load technician record
+  const { data: tech, error } = await sb
+    .from("technicians")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  if (error || !tech) {
+    console.error("Technician record not found.");
+    return;
+  }
+
+  techRecord = tech;
+
+  // Technician approval logic
+  if (!techRecord.documents_submitted) {
+    // Has not uploaded onboarding documents
+    showPanel("onboarding-panel");
+    return;
+  }
+
+  if (!techRecord.approved) {
+    // Documents submitted but not approved yet
+    showPanel("approval-panel");
+    return;
+  }
+
+  // Technician is fully approved → show dashboard
+  showPanel("active-panel");
+  loadJobs();
+  initMap();
+}
