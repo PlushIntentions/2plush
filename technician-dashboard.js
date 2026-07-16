@@ -11,6 +11,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("Forced unhide executed.");
 });
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("Forced unhide executed.");
+
+  try {
+    await bootApp();
+  } catch (err) {
+    console.error("BootApp failed:", err);
+  }
+});
 
 
 // ---------- SUPABASE INIT ----------
