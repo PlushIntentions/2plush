@@ -309,7 +309,7 @@ function renderUnassignedJobs(jobs) {
 }
 
 /* FILES PANEL */
-function openFilesPanel(jobId) {
+function showFilesPanel(jobId) {
   currentJobForFiles = jobId;
   showPanel("files-panel");
 }
@@ -412,13 +412,6 @@ async function loadActiveJobs() {
   }
 }
 
-
-function openPanel(panelId) {
-  const panels = document.querySelectorAll('.dashboard-panel'); // Adjust selector to match your HTML
-  panels.forEach(panel => {
-    panel.style.display = panel.id === panelId ? 'block' : 'none';
-  });
-}
 
 async function checkIn(jobId) {
   try {
