@@ -169,7 +169,7 @@ async function loadJobs() {
       *,
       clients (name, address, lat, lng)
     `)
-    .eq("tech_id", techRecord.id)
+    .eq("technician_id", techRecord.id)
     .order("start_time", { ascending: true });
 
   if (error) {
@@ -193,7 +193,7 @@ async function loadUnassignedJobs() {
       *,
       clients (name, address, lat, lng)
     `)
-    .is("tech_id", null)
+    .is("technician_id", null)
     .order("start_time", { ascending: true });
 
   if (error) {
