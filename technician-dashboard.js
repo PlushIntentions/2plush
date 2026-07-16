@@ -29,7 +29,13 @@ function setupSidebarNavigation() {
     "nav-unassigned": "unassigned-panel",
     "nav-profile": "profile-panel"
   };
+document.getElementById("nav-requested").onclick = () => {
+  showPanel("requested-panel");
+  loadRequestedJobs();
+  highlightNav("nav-requested");
+};
 
+   
   Object.keys(navItems).forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
