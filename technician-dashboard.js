@@ -464,3 +464,31 @@ function openPanel(panelId) {
     console.error("Panel not found:", panelId);
   }
 
+async function requestJob(jobId) {
+  try {
+    // Assign job to this technician
+    const { error } = await sb
+      .from("jobs")
+      .update({
+        technician_id: techRecord.id,
+        status: "assigned"
+      })
+      .eq("id", jobId);
+
+    if (error) throw error;
+
+    showToast("Job requested successfully.");
+
+    // Refresh lists
+    await loadUnassignedJobs();
+    await loadJobs();
+
+    // Return to Active Jobs panel
+    showPanel("active-panel");
+    highlightNav("nav-active");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to request job.");
+  }
+}
