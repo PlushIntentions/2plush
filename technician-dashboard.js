@@ -399,7 +399,7 @@ async function loadActiveJobs() {
         <h3>${job.title}</h3>
         <p>${job.address}</p>
         <p><strong>Clock-in:</strong> ${job.check_in_time || "Not recorded"}</p>
-        <button class="btn" onclick="openJobFiles(${job.id})">Files</button>
+        <button class="btn" onclick="showJobFiles(${job.id})">Files</button>
         <button class="btn" onclick="openSignout(${job.id})">Complete Job</button>
       `;
 
