@@ -466,26 +466,20 @@ function openPanel(panelId) {
 
 async function requestJob(jobId) {
   try {
-    // Assign job to this technician
     const { error } = await sb
       .from("jobs")
       .update({
-        technician_id: techRecord.id,
-        status: "assigned"
+        request_status: "requested",
+        requested_by: techRecord.id
       })
       .eq("id", jobId);
 
     if (error) throw error;
 
-    showToast("Job requested successfully.");
+    showToast("Job request submitted.");
 
-    // Refresh lists
-    await loadUnassignedJobs();
-    await loadJobs();
-
-    // Return to Active Jobs panel
-    showPanel("active-panel");
-    highlightNav("nav-active");
+    await loadUnassignedJobs(); // job stays visible
+    await loadJobs();           // tech sees it in their “Requested” list if you add one
 
   } catch (err) {
     console.error(err);
