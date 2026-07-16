@@ -435,10 +435,10 @@ async function checkIn(jobId) {
 }
 ﻿
 function openPanel(panelId) {
-  // Hide all panels
-  document.querySelectorAll(".panel").forEach(p => {
-    p.classList.add("hidden");
-  });
+  document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
+  document.getElementById(panelId)?.classList.remove("hidden");
+}
+
 
   // Show the selected panel
   const target = document.getElementById(panelId);
