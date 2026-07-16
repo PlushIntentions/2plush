@@ -372,3 +372,31 @@ async function checkIn(jobId) {
     showToast("Clock-in failed.");
   }
 }
+
+async function loadActiveJobs() {
+  const { data, error } = await sb.from("jobs").select("*").eq("status", "in_progress");
+  if (error) console.error(error);
+  // logic to render jobs to the UI goes here
+}
+
+async function checkIn(jobId) {
+  try {
+    const timestamp = new Date().toISOString();
+    const { data, error } = await sb
+      .from("jobs")
+      .update({ status: "in_progress", check_in_time: timestamp })
+      .eq("id", jobId);
+
+    if (error) throw error;
+
+    showToast("Clock-in recorded.");
+    // This will now work because the function is defined
+    loadActiveJobs(); 
+    openPanel("active-panel");
+  } catch (err) {
+    console.error(err);
+    showToast("Clock-in failed.");
+  }
+}
+
+﻿
