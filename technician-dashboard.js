@@ -39,13 +39,6 @@ function showPanel(panelId) {
 }
 
 /****************************************************
- * GLOBAL STATE
- ****************************************************/
-let currentJobForFiles = null;
-let currentJobForSignout = null;
-let techRecord = null;
-
-/****************************************************
  * LOAD JOBS
  ****************************************************/
 async function loadJobs() {
