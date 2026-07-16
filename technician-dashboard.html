@@ -1,138 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plush Intentions – Tech Portal</title>
-  <link rel="stylesheet" href="tech.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="tech.js"></script>
+  <meta charset="UTF-8">
+  <title>Technician Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
+ <script src="https://unpkg.com/feather-icons"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Styles -->
+  <link rel="stylesheet" href="technician-dashboard.css">
 </head>
+
 <body>
 
-  
-
-  <!-- APP SHELL -->
-  <div id="app-shell" class="hidden">
-
-    <!-- TOPBAR -->
-    <header class="topbar glass-bar">
-      <div class="topbar-left">
-        <span id="tech-name">Technician</span>
-        <span class="status-pill" id="tech-status">Offline</span>
-      </div>
-      <div class="topbar-right">
-        <button id="clock-btn" class="btn-glass">Clock In</button>
-      </div>
-    </header>
-
-    <!-- MAIN -->
-    <main class="main-content">
-
-      <!-- HOME -->
-      <section class="panel active" id="panel-home">
-        <div class="glass-grid">
-          <div class="glass-card">
-            <h2>Today</h2>
-            <p id="home-summary">Loading…</p>
-          </div>
-          <div class="glass-card">
-            <h3>Current Job</h3>
-            <div id="current-job">No active job</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ASSIGNED JOBS -->
-      <section class="panel" id="panel-jobs">
-        <h2>My Jobs</h2>
-        <div id="jobs-list" class="glass-list"></div>
-      </section>
-
-      <!-- UNASSIGNED -->
-      <section class="panel" id="panel-unassigned">
-        <h2>Unassigned Work Orders</h2>
-        <div id="unassigned-list" class="glass-list"></div>
-      </section>
-
-      <!-- JOB DETAIL -->
-      <section class="panel" id="panel-job-detail">
-        <button class="btn-link" id="back-to-jobs">&larr; Back</button>
-        <div class="glass-card" id="job-detail-card"></div>
-      </section>
-
-      <!-- EARNINGS -->
-      <section class="panel" id="panel-earnings">
-        <h2>Earnings & Hours</h2>
-        <div class="glass-grid">
-          <div class="glass-card">
-            <h3>Total Earnings</h3>
-            <div id="earn-total">$0.00</div>
-          </div>
-          <div class="glass-card">
-            <h3>Total Hours</h3>
-            <div id="earn-hours">0h 0m</div>
-          </div>
-          <div class="glass-card">
-            <h3>Completed Jobs</h3>
-            <div id="earn-count">0</div>
-          </div>
-        </div>
-        <div class="glass-card">
-          <h3>Per Job</h3>
-          <div id="earnings-list" class="glass-list"></div>
-        </div>
-      </section>
-
-      <!-- INFRACTIONS -->
-      <section class="panel" id="panel-infractions">
-        <h2>Infractions</h2>
-        <div id="infractions-list" class="glass-list"></div>
-      </section>
-
-      <!-- PROFILE -->
-      <section class="panel" id="panel-profile">
-        <h2>Profile</h2>
-        <div class="glass-card">
-          <p id="profile-email"></p>
-          <button id="signout-btn" class="btn-glass">Sign Out</button>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- BOTTOM NAV -->
-    <nav class="bottom-nav glass-bar">
-      <button data-target="home" class="nav-btn active">Home</button>
-      <button data-target="jobs" class="nav-btn">Jobs</button>
-      <button data-target="unassigned" class="nav-btn">Unassigned</button>
-      <button data-target="earnings" class="nav-btn">Earnings</button>
-      <button data-target="profile" class="nav-btn">Profile</button>
-    </nav>
-
+  <!-- LOADER -->
+  <div id="loader" class="loader hidden">
+    <div class="spinner"></div>
+    <p>Loading...</p>
   </div>
 
+  <!-- MAIN PANEL WRAPPER -->
+  <div id="main-panel" class="hidden">
 
-  <!-- SIMPLE TOAST -->
-  <div id="toast"></div>
-
-  
-  <!-- SIGNATURE MODAL -->
-  <div id="signature-modal" class="modal hidden">
-    <div class="modal-content glass-card">
-      <h3>Manager on Duty Signature</h3>
-      <canvas id="signature-pad"></canvas>
-      <div class="modal-actions">
-        <button id="sig-clear">Clear</button>
-        <button id="sig-save">Save</button>
-        <button id="sig-cancel">Cancel</button>
-      </div>
+    <!-- MAP PANEL -->
+    <div id="map-panel" class="panel hidden">
+      <h2>Job Map</h2>
+      <div id="map" class="map-container"></div>
     </div>
+
+    <!-- ACTIVE JOBS PANEL -->
+    <div id="active-panel" class="panel hidden">
+      <h2>Active Jobs</h2>
+      <div id="active-list"></div>
+    </div>
+
+    <!-- COMPLETED JOBS PANEL -->
+    <div id="completed-panel" class="panel hidden">
+      <h2>Completed Jobs</h2>
+      <div id="completed-list"></div>
+    </div>
+
+    <!-- UNASSIGNED JOBS PANEL -->
+    <div id="unassigned-panel" class="panel hidden">
+      <h2>Available Jobs</h2>
+      <div id="unassigned-list"></div>
+    </div>
+
+    <!-- FILES PANEL -->
+    <div id="files-panel" class="panel hidden">
+      <h2>Job Files</h2>
+      <div id="files-list"></div>
+      <button onclick="closeFilesPanel()" class="btn">Close</button>
+    </div>
+
+    <!-- SIGNOUT PANEL -->
+    <div id="signout-panel" class="panel hidden">
+      <h2>Complete Job</h2>
+      <p>Upload your sign-out photos:</p>
+
+      <input type="file" id="signout-photo-1">
+      <input type="file" id="signout-photo-2">
+
+      <button onclick="submitSignOutUpload()" class="btn btn-primary">Submit</button>
+      <button onclick="cancelSignOutUpload()" class="btn btn-secondary">Cancel</button>
+    </div>
+
+    <!-- ONBOARDING PANEL -->
+    <div id="onboarding-panel" class="panel hidden">
+      <h2>Upload Required Documents</h2>
+
+      <label>MSA</label>
+      <input type="file" id="doc-msa">
+
+      <label>NDA</label>
+      <input type="file" id="doc-nda">
+
+      <label>W9</label>
+      <input type="file" id="doc-w9">
+
+      <label>ID</label>
+      <input type="file" id="doc-id">
+
+      <button onclick="uploadAllDocuments()" class="btn btn-primary">Submit Documents</button>
+    </div>
+
+    <!-- APPROVAL PANEL -->
+    <div id="approval-panel" class="panel hidden">
+      <h2>Pending Approval</h2>
+      <p>Your documents have been submitted. Please wait for admin approval.</p>
+    </div>
+
+    <!-- PROFILE PANEL -->
+    <div id="profile-panel" class="panel hidden">
+      <h2>Your Profile</h2>
+      <div id="profile-content"></div>
+    </div>
+
   </div>
 
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
 
-  
+  <!-- JS -->
+  <script src="https://admins.plushintentions.work/technician-dashboard.js"></script>
+
 </body>
 </html>
