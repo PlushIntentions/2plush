@@ -365,7 +365,7 @@ async function checkIn(jobId) {
 
     showToast("Clock-in recorded.");
     loadActiveJobs();
-    openPanel("active-panel");
+    showPanel("active-panel");
 
   } catch (err) {
     console.error(err);
@@ -425,7 +425,7 @@ async function checkIn(jobId) {
 
     showToast("Clock-in recorded.");
     loadActiveJobs(); 
-    openPanel("active-panel");
+    showPanel("active-panel");
   } catch (err) {
     console.error(err);
     showToast("Clock-in failed.");
