@@ -1,417 +1,320 @@
+/* ============================================================
+   TECHNICIAN DASHBOARD — FULLY REFACTORED TO MATCH YOUR HTML
+   ============================================================ */
 
-// ---------- SUPABASE INIT ----------
-const SUPABASE_URL = 'https://iazvpykfdckpffhakncd.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhenZweWtmZGNrcGZmaGFrbmNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzA0MTEsImV4cCI6MjA5NTg0NjQxMX0.OOXhS1zLez30isOszxP0XOIyndpJq2jwqE90eY649bA';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let sb;
+let map;
+let jobMarkers = [];
+let currentUser = null;
+let techRecord = null;
+let currentJobForSignout = null;
+let currentJobForFiles = null;
 
-let currentTech = null;
-let currentJob = null;
+/* CONFIG */
+const SUPABASE_URL = "https://iazvpykfdckpffhakncd.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_KEY";
+const MAPBOX_TOKEN = "YOUR_MAPBOX_TOKEN";
 
-
-const signoutBtn = document.getElementById("signout-btn");
-if (signoutBtn) {
-  signoutBtn.addEventListener("click", () => {
-    // your logic
-  });
+/* INIT SUPABASE */
+function initSupabase() {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// ---------- INIT ----------
-async function initTechPortal() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
+/* SIDEBAR NAVIGATION */
+function setupSidebarNavigation() {
+  const navItems = {
+    "nav-map": "map-panel",
+    "nav-active": "active-panel",
+    "nav-completed": "completed-panel",
+    "nav-unassigned": "unassigned-panel",
+    "nav-profile": "profile-panel"
+  };
 
-  document.getElementById('profile-email').textContent = user.email;
+  Object.keys(navItems).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-  const { data: profile } = await supabaseClient
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile) return;
-
-  const { data: tech } = await supabaseClient
-    .from('technicians')
-    .select('*')
-    .eq('profile_id', profile.id)
-    .single();
-
-  currentTech = tech;
-  document.getElementById('tech-name').textContent = tech.full_name || 'Technician';
-
-  setupNav();
-  setupClockButton();
-  await loadDashboardData();
-}
-
-// ---------- NAV ----------
-function setupNav() {
-  const buttons = document.querySelectorAll('.nav-btn');
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.target;
-      buttons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      switchPanel(target);
+    el.addEventListener("click", () => {
+      showPanel(navItems[id]);
+      highlightNav(id);
     });
   });
 
-  const backBtn = document.getElementById('back-to-jobs');
-  if (backBtn) {
-    backBtn.addEventListener('click', () => switchPanel('jobs'));
+  const hamburger = document.getElementById("hamburger");
+  const sidebar = document.querySelector(".sidebar");
+  const backdrop = document.querySelector(".sidebar-backdrop");
+  const closeBtn = document.querySelector(".sidebar-close-btn");
+
+  if (hamburger) {
+    hamburger.addEventListener("click", () => {
+      sidebar.classList.add("open");
+      backdrop.classList.add("show");
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      backdrop.classList.remove("show");
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      backdrop.classList.remove("show");
+    });
   }
 }
 
-function switchPanel(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  const panel = document.getElementById(`panel-${name}`);
-  if (panel) panel.classList.add('active');
+/* PANEL SWITCHING */
+function hideAllPanels() {
+  document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
 }
 
-// ---------- CLOCK IN / OUT ----------
-function setupClockButton() {
-  const clockBtn = document.getElementById('clock-btn');
-  if (!clockBtn) return;
-
-  let clockedIn = false;
-
-  clockBtn.addEventListener('click', async () => {
-    if (!currentTech) return;
-
-    clockedIn = !clockedIn;
-    document.getElementById('tech-status').textContent = clockedIn ? 'Online' : 'Offline';
-    clockBtn.textContent = clockedIn ? 'Clock Out' : 'Clock In';
-
-    await supabaseClient.from('work_order_history').insert({
-      job_id: null,
-      tech_id: currentTech.id,
-      status: clockedIn ? 'clock_in' : 'clock_out'
-    });
-  });
+function showPanel(id) {
+  hideAllPanels();
+  const panel = document.getElementById(id);
+  if (panel) panel.classList.remove("hidden");
 }
 
-// ---------- DASHBOARD LOAD ----------
-async function loadDashboardData() {
-  await Promise.all([
-    loadAssignedJobs(),
-    loadUnassignedWorkOrders(),
-    loadEarnings(),
-    loadInfractions()
-  ]);
+function highlightNav(id) {
+  document.querySelectorAll(".nav-link").forEach(n => n.classList.remove("active"));
+  const active = document.getElementById(id);
+  if (active) active.classList.add("active");
 }
 
-// ---------- ASSIGNED JOBS ----------
-async function loadAssignedJobs() {
-  if (!currentTech) return;
+/* AUTO‑AUTH CHECK */
+window.addEventListener("DOMContentLoaded", async () => {
+  initSupabase();
 
-  const { data, error } = await supabaseClient
-    .from('jobs')
-    .select('*, work_orders(*)')
-    .eq('assigned_to', currentTech.id)
-    .order('scheduled_date', { ascending: true });
-
-  const list = document.getElementById('jobs-list');
-  if (!list) return;
-  list.innerHTML = '';
-
-  if (error || !data || !data.length) {
-    list.innerHTML = '<div class="glass-card">No jobs assigned.</div>';
+  const { data: session } = await sb.auth.getSession();
+  if (!session || !session.session) {
+    window.location.href = "/login.html";
     return;
   }
 
-  data.forEach(job => {
-    const card = document.createElement('div');
-    card.className = 'glass-card';
-    card.innerHTML = `
-      <div><strong>${job.title}</strong></div>
-      <div>Status: ${job.status}</div>
-      <div>${job.scheduled_date || ''} ${job.scheduled_time || ''}</div>
-      <button class="btn-glass" data-id="${job.id}">Open</button>
-    `;
-    card.querySelector('button').addEventListener('click', () => openJobDetail(job));
-    list.appendChild(card);
-  });
-}
+  currentUser = session.session.user;
 
-// ---------- UNASSIGNED WORK ORDERS ----------
-async function loadUnassignedWorkOrders() {
-  const { data, error } = await supabaseClient
-    .from('jobs')
-    .select('*, work_orders(*)')
-    .is('assigned_to', null)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true });
+  try {
+    await bootApp();
+  } catch (err) {
+    console.error("BootApp failed:", err);
+  }
+});
 
-  const list = document.getElementById('unassigned-list');
-  if (!list) return;
-  list.innerHTML = '';
+/* BOOT APP */
+async function bootApp() {
+  document.getElementById("loader").classList.remove("hidden");
 
-  if (error || !data || !data.length) {
-    list.innerHTML = '<div class="glass-card">No unassigned work orders.</div>';
+  const { data, error } = await sb
+    .from("technicians")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .single();
+
+  if (error || !data) {
+    showToast("Technician record not found.");
+    document.getElementById("loader").classList.add("hidden");
     return;
   }
 
-  data.forEach(job => {
-    const card = document.createElement('div');
-    card.className = 'glass-card';
-    card.innerHTML = `
-      <div><strong>${job.title}</strong></div>
-      <div>Status: ${job.status}</div>
-      <div>${job.scheduled_date || ''} ${job.scheduled_time || ''}</div>
-      <div style="margin-top:8px; display:flex; gap:6px;">
-        <button class="btn-glass" data-action="request" data-id="${job.id}">Request</button>
-        <button class="btn-glass" data-action="decline" data-id="${job.id}">Decline</button>
-      </div>
-    `;
-    card.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => handleUnassignedAction(job, btn.dataset.action));
-    });
-    list.appendChild(card);
-  });
-}
+  techRecord = data;
 
-async function handleUnassignedAction(job, action) {
-  if (!currentTech) return;
+  document.getElementById("main-panel").classList.remove("hidden");
 
-  if (action === 'request') {
-    await supabaseClient.from('job_requests').insert({
-      job_id: job.id,
-      tech_id: currentTech.id
-    });
-    showToast('Job requested.');
-  } else if (action === 'decline') {
-    await supabaseClient.from('job_declines').insert({
-      job_id: job.id,
-      tech_id: currentTech.id
-    });
-    showToast('Job declined.');
+  setupSidebarNavigation();
+
+  if (techRecord.status === "pending_documents") {
+    showPanel("onboarding-panel");
+    document.getElementById("loader").classList.add("hidden");
+    return;
   }
+
+  if (techRecord.status === "pending_approval") {
+    showPanel("approval-panel");
+    document.getElementById("loader").classList.add("hidden");
+    return;
+  }
+
+  await initMap();
+  await loadJobs();
+  await loadUnassignedJobs();
+  renderProfile();
+
+  showPanel("map-panel");
+  highlightNav("nav-map");
+
+  document.getElementById("loader").classList.add("hidden");
 }
 
-// ---------- JOB DETAIL + STATUS ----------
-function openJobDetail(job) {
-  currentJob = job;
-  switchPanel('job-detail');
-
-  const card = document.getElementById('job-detail-card');
-  if (!card) return;
-
-  card.innerHTML = `
-    <h2>${job.title}</h2>
-    <p>${job.description || ''}</p>
-    <p>Status: <strong>${job.status}</strong></p>
-    <p>Rate: $${job.rate || '0.00'}</p>
-    <p>Scheduled: ${job.scheduled_date || ''} ${job.scheduled_time || ''}</p>
-    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;">
-      <button class="btn-glass" id="btn-start">Start</button>
-      <button class="btn-glass" id="btn-pause">Pause</button>
-      <button class="btn-glass" id="btn-complete">Complete / Submit Work Order</button>
-    </div>
-  `;
-
-  document.getElementById('btn-start').onclick = () => updateJobStatus('active');
-  document.getElementById('btn-pause').onclick = () => updateJobStatus('pending');
-
-  // IMPORTANT: complete → update status, then open signature modal
-  document.getElementById('btn-complete').onclick = async () => {
-    await updateJobStatus('completed');
-    openSignatureModal();
-  };
-}
-
-async function updateJobStatus(status) {
-  if (!currentJob || !currentTech) return;
-
-  await supabaseClient
-    .from('jobs')
-    .update({ status })
-    .eq('id', currentJob.id);
-
-  await supabaseClient.from('work_order_history').insert({
-    job_id: currentJob.id,
-    tech_id: currentTech.id,
-    status
+/* MAP INIT */
+async function initMap() {
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  map = new mapboxgl.Map({
+    container: "map",
+    style: "mapbox://styles/mapbox/streets-v11",
+    center: [-81.6326, 38.3498],
+    zoom: 11
   });
 
-  showToast(`Status updated to ${status}.`);
-  await loadAssignedJobs();
+  map.addControl(new mapboxgl.NavigationControl(), "top-right");
 }
 
-// ---------- SIGNATURE MODAL (MANAGER ON DUTY) ----------
-let sigPad = null;
-let sigCtx = null;
-let drawing = false;
-
-function openSignatureModal() {
-  const modal = document.getElementById('signature-modal');
-  if (!modal) return;
-
-  modal.classList.remove('hidden');
-
-  if (!sigPad) initSignaturePad();
-
-  document.getElementById('sig-clear').onclick = () => {
-    sigCtx.clearRect(0, 0, sigPad.width, sigPad.height);
-  };
-
-  document.getElementById('sig-cancel').onclick = () => {
-    modal.classList.add('hidden');
-  };
-
-  document.getElementById('sig-save').onclick = saveSignature;
-}
-
-function initSignaturePad() {
-  sigPad = document.getElementById('signature-pad');
-  if (!sigPad) return;
-
-  sigCtx = sigPad.getContext('2d');
-  sigCtx.strokeStyle = '#ffffff';
-  sigCtx.lineWidth = 2;
-
-  sigPad.onmousedown = e => {
-    drawing = true;
-    sigCtx.beginPath();
-    sigCtx.moveTo(e.offsetX, e.offsetY);
-  };
-
-  sigPad.onmousemove = e => {
-    if (!drawing) return;
-    sigCtx.lineTo(e.offsetX, e.offsetY);
-    sigCtx.stroke();
-  };
-
-  sigPad.onmouseup = () => { drawing = false; };
-  sigPad.onmouseleave = () => { drawing = false; };
-}
-
-async function saveSignature() {
-  if (!currentJob || !currentTech || !sigPad) return;
-
-  const dataUrl = sigPad.toDataURL('image/png');
-  const blob = await (await fetch(dataUrl)).blob();
-  const fileName = `signature_${currentJob.id}_${Date.now()}.png`;
-
-  const { data, error } = await supabaseClient.storage
-    .from('work_order_photos')
-    .upload(fileName, blob);
+/* LOAD JOBS */
+async function loadJobs() {
+  const { data: jobs, error } = await sb
+    .from("jobs")
+    .select(`
+      *,
+      clients (name, address, lat, lng)
+    `)
+    .eq("tech_id", techRecord.id)
+    .order("start_time", { ascending: true });
 
   if (error) {
-    showToast('Error saving signature.');
+    showToast("Failed to load jobs.");
     return;
   }
 
-  const publicUrl = supabaseClient.storage
-    .from('work_order_photos')
-    .getPublicUrl(data.path).data.publicUrl;
+  const active = jobs.filter(j => j.status !== "completed");
+  const completed = jobs.filter(j => j.status === "completed");
 
-  await supabaseClient
-    .from('work_orders')
-    .update({ manager_signature_url: publicUrl })
-    .eq('job_id', currentJob.id);
-
-  showToast('Signature saved.');
-  document.getElementById('signature-modal').classList.add('hidden');
+  renderActiveJobs(active);
+  renderCompletedJobs(completed);
+  plotJobsOnMap(jobs);
 }
 
-// ---------- EARNINGS ----------
-async function loadEarnings() {
-  if (!currentTech) return;
+/* LOAD UNASSIGNED JOBS */
+async function loadUnassignedJobs() {
+  const { data: jobs, error } = await sb
+    .from("jobs")
+    .select(`
+      *,
+      clients (name, address, lat, lng)
+    `)
+    .is("tech_id", null)
+    .order("start_time", { ascending: true });
 
-  const { data, error } = await supabaseClient
-    .from('earnings')
-    .select('*')
-    .eq('tech_id', currentTech.id);
-
-  if (error || !data) return;
-
-  const total = data.reduce((sum, e) => sum + (e.amount || 0), 0);
-  document.getElementById('earn-total').textContent = `$${total.toFixed(2)}`;
-  document.getElementById('earn-count').textContent = data.length;
-
-  const list = document.getElementById('earnings-list');
-  if (!list) return;
-  list.innerHTML = '';
-
-  data.forEach(e => {
-    const card = document.createElement('div');
-    card.className = 'glass-card';
-    card.innerHTML = `
-      <div>Job #${e.job_id}</div>
-      <div>Amount: $${(e.amount || 0).toFixed(2)}</div>
-    `;
-    list.appendChild(card);
-  });
-}
-
-// ---------- INFRACTIONS ----------
-async function loadInfractions() {
-  if (!currentTech) return;
-
-  const { data, error } = await supabaseClient
-    .from('tech_infractions')
-    .select('*')
-    .eq('tech_id', currentTech.id)
-    .order('created_at', { ascending: false });
-
-  const list = document.getElementById('infractions-list');
-  if (!list) return;
-  list.innerHTML = '';
-
-  if (error || !data || !data.length) {
-    list.innerHTML = '<div class="glass-card">No infractions.</div>';
+  if (error) {
+    showToast("Failed to load available jobs.");
     return;
   }
 
-  data.forEach(inf => {
-    const card = document.createElement('div');
-    card.className = 'glass-card';
+  renderUnassignedJobs(jobs);
+}
+
+/* RENDER JOB LISTS */
+function renderActiveJobs(jobs) {
+  const el = document.getElementById("active-list");
+  el.innerHTML = "";
+
+  if (!jobs.length) {
+    el.innerHTML = `<p>No active jobs yet</p>`;
+    return;
+  }
+
+  jobs.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "job-card";
+
     card.innerHTML = `
-      <div><strong>${inf.type || 'Infraction'}</strong></div>
-      <div>${inf.reason || ''}</div>
-      <div>${inf.created_at || ''}</div>
+      <h3>${job.title}</h3>
+      <p><strong>Client:</strong> ${job.clients?.name}</p>
+      <p><strong>Address:</strong> ${job.clients?.address}</p>
+
+      <button onclick="checkIn('${job.id}')">Check In</button>
+      <button onclick="markComplete('${job.id}')">Complete</button>
+      <button onclick="openFilesPanel('${job.id}')">Files</button>
     `;
-    list.appendChild(card);
+
+    el.appendChild(card);
   });
 }
 
-// ---------- TOAST ----------
+function renderCompletedJobs(jobs) {
+  const el = document.getElementById("completed-list");
+  el.innerHTML = "";
+
+  if (!jobs.length) {
+    el.innerHTML = `<p>No completed jobs yet</p>`;
+    return;
+  }
+
+  jobs.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "job-card";
+
+    card.innerHTML = `
+      <h3>${job.title}</h3>
+      <p><strong>Client:</strong> ${job.clients?.name}</p>
+      <p><strong>Completed:</strong> ${job.completed_time}</p>
+    `;
+
+    el.appendChild(card);
+  });
+}
+
+function renderUnassignedJobs(jobs) {
+  const el = document.getElementById("unassigned-list");
+  el.innerHTML = "";
+
+  if (!jobs.length) {
+    el.innerHTML = `<p>No available jobs</p>`;
+    return;
+  }
+
+  jobs.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "job-card";
+
+    card.innerHTML = `
+      <h3>${job.title}</h3>
+      <p><strong>Client:</strong> ${job.clients?.name}</p>
+      <p><strong>Address:</strong> ${job.clients?.address}</p>
+    `;
+
+    el.appendChild(card);
+  });
+}
+
+/* FILES PANEL */
+function openFilesPanel(jobId) {
+  currentJobForFiles = jobId;
+  showPanel("files-panel");
+}
+
+function closeFilesPanel() {
+  currentJobForFiles = null;
+  showPanel("active-panel");
+}
+
+/* SIGNOUT PANEL */
+function markComplete(jobId) {
+  currentJobForSignout = jobId;
+  showPanel("signout-panel");
+}
+
+function cancelSignOutUpload() {
+  currentJobForSignout = null;
+  showPanel("active-panel");
+}
+
+/* PROFILE */
+function renderProfile() {
+  const el = document.getElementById("profile-content");
+  el.innerHTML = `
+    <p><strong>Name:</strong> ${techRecord.name}</p>
+    <p><strong>Email:</strong> ${currentUser.email}</p>
+    <p><strong>Status:</strong> ${techRecord.status}</p>
+  `;
+}
+
+/* TOAST */
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 2000);
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+
+  setTimeout(() => toast.classList.remove("show"), 3000);
 }
-window.addEventListener("DOMContentLoaded", async () => {
-  console.log("Forced unhide executed.");
-
-  // Unhide everything
-  const mainPanel = document.getElementById("main-panel");
-  if (mainPanel) mainPanel.classList.remove("hidden");
-
-  document.querySelectorAll(".panel").forEach(p => {
-    p.classList.remove("hidden");
-    p.classList.add("active");
-  });
-
-  // Boot the app
-  try {
-    await bootApp();
-  } catch (err) {
-    console.error("BootApp failed:", err);
-  }
-});
-
-
-
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("Forced unhide executed.");
-
-  try {
-    await bootApp();
-  } catch (err) {
-    console.error("BootApp failed:", err);
-  }
-});
- 
