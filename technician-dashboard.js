@@ -161,6 +161,36 @@ async function initMap() {
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
 }
 
+/* MAP MARKERS */
+function plotJobsOnMap(jobs) {
+  if (!map) return;
+
+  // Remove old markers
+  jobMarkers.forEach(m => m.remove());
+  jobMarkers = [];
+
+  jobs.forEach(job => {
+    if (!job.clients?.lat || !job.clients?.lng) return;
+
+    const el = document.createElement("div");
+    el.className = "job-marker";
+
+    const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
+      <strong>${job.title}</strong><br/>
+      ${job.clients.name}<br/>
+      ${job.clients.address}
+    `);
+
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([job.clients.lng, job.clients.lat])
+      .setPopup(popup)
+      .addTo(map);
+
+    jobMarkers.push(marker);
+  });
+}
+
+
 /* LOAD JOBS */
 async function loadJobs() {
   const { data: jobs, error } = await sb
