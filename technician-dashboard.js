@@ -384,6 +384,15 @@ function showToast(msg) {
 async function bootApp() {
   showMainPanel();
 
+  // Load logged-in user FIRST
+  const { data: userData } = await sb.auth.getUser();
+  if (!userData || !userData.user) {
+    console.error("No logged-in user.");
+    return;
+  }
+
+  const currentUser = userData.user;
+
   // Load technician record
   const { data: tech, error } = await sb
     .from("technicians")
@@ -393,6 +402,7 @@ async function bootApp() {
 
   if (error || !tech) {
     console.error("Technician record not found.");
+    showPanel("onboarding-panel");
     return;
   }
 
@@ -400,13 +410,11 @@ async function bootApp() {
 
   // Technician approval logic
   if (!techRecord.documents_submitted) {
-    // Has not uploaded onboarding documents
     showPanel("onboarding-panel");
     return;
   }
 
   if (!techRecord.approved) {
-    // Documents submitted but not approved yet
     showPanel("approval-panel");
     return;
   }
@@ -416,3 +424,4 @@ async function bootApp() {
   loadJobs();
   initMap();
 }
+
