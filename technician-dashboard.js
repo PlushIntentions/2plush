@@ -503,7 +503,7 @@ async function requestJob(jobId, techId) {
 async function loadRequestedJobs() {
   try {
     const { data: jobs, error } = await sb
-      .from("jobs")
+      .from("job_requests")
       .select(`
         id,
         title,
@@ -573,7 +573,7 @@ async function cancelJobRequest(jobId) {
   try {
     // Fetch job
     const { data: job, error: fetchError } = await sb
-      .from("jobs")
+      .from("job_requests")
       .select("requested_by")
       .eq("id", jobId)
       .maybeSingle();
@@ -586,7 +586,7 @@ async function cancelJobRequest(jobId) {
     requestedBy = requestedBy.filter(id => id !== techRecord.id);
 
     const { error: updateError } = await sb
-      .from("jobs")
+      .from("job_requests")
       .update({
         requested_by: requestedBy,
         request_status: requestedBy.length ? "requested" : "none"
