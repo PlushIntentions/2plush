@@ -464,36 +464,31 @@ function openPanel(panelId) {
     console.error("Panel not found:", panelId);
   }
 
-async function submitJobRequest(event) {
-  event.preventDefault();
-
-  const title = document.getElementById("req-title").value;
-  const description = document.getElementById("req-description").value;
-  const location = document.getElementById("req-location").value;
-  const priority = document.getElementById("req-priority").value;
-
+async function requestJob(jobId) {
   try {
-    const { data, error } = await sb
-      .from("job_requests")
-      .insert({
-        job_id: selectedJobId,
-        tech_id: techRecord.id,
-        title,
-        description,
-        priority,
-        status: "Pending"
-      });
+    // Assign job to this technician
+    const { error } = await sb
+      .from("jobs")
+      .update({
+        technician_id: techRecord.id,
+        status: "assigned"
+      })
+      .eq("id", jobId);
 
     if (error) throw error;
 
-    showToast("Job request submitted successfully!");
-    closeRequestJobModal();
-    await loadJobRequests();
+    showToast("Job requested successfully.");
+
+    // Refresh lists
+    await loadUnassignedJobs();
+    await loadJobs();
+
+    // Return to Active Jobs panel
+    showPanel("active-panel");
+    highlightNav("nav-active");
 
   } catch (err) {
-    console.error("Error submitting job request:", err);
-    showToast("Failed to submit job request.");
+    console.error(err);
+    showToast("Failed to request job.");
   }
 }
-
-
