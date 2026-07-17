@@ -279,7 +279,7 @@ async function loadJobRequests() {
   const { data: requests, error } = await sb
     .from("job_requests")
     .select("*")
-    .eq("technician_id", techRecord.id)
+    .eq("tech_id", techRecord.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -471,7 +471,7 @@ async function submitJobRequest(event) {
       .from("job_requests")
       .insert([
         {
-          technician_id: techRecord.id,
+          tech_id: techRecord.id,
           title,
           description,
           location,
