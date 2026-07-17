@@ -29,13 +29,7 @@ function setupSidebarNavigation() {
     "nav-unassigned": "unassigned-panel",
     "nav-profile": "profile-panel"
   };
-document.getElementById("nav-requested").onclick = () => {
-  showPanel("requested-panel");
-  loadRequestedJobs();
-  highlightNav("nav-requested");
-};
 
-   
   Object.keys(navItems).forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -145,7 +139,6 @@ async function bootApp() {
  if (techRecord.status === "approved") {
     await initMap();
     await loadJobs();
-    await loadRequestedJobs();
     await loadUnassignedJobs();
     renderProfile();
 
@@ -471,140 +464,25 @@ function openPanel(panelId) {
     console.error("Panel not found:", panelId);
   }
 
-async function requestJob(jobId, techId) {
-  const { error } = await sb
-    .from("job_requests")
-    .insert({
-      job_id: jobId,
-      tech_id: techId,
-      status: "requested"
-    });
+async function requestJob(jobId) {
+  try {
+    const { error } = await sb
+      .from("jobs")
+      .update({
+        request_status: "requested",
+        requested_by: techRecord.id
+      })
+      .eq("id", jobId);
 
-  if (error) {
-    console.error("requestJob error:", error);
-    showToast("Error requesting job", "error");
-    return;
-  }
+    if (error) throw error;
 
-  showToast("Request sent!", "success");
-}
+    showToast("Job request submitted.");
 
-
-    // Refresh lists
-    await loadUnassignedJobs();
-    await loadJobs();
+    await loadUnassignedJobs(); // job stays visible
+    await loadJobs();           // tech sees it in their “Requested” list if you add one
 
   } catch (err) {
     console.error(err);
     showToast("Failed to request job.");
   }
 }
-
-async function loadRequestedJobs() {
-  try {
-    const { data: jobs, error } = await sb
-      .from("job_requests")
-      .select(`
-        id,
-        title,
-        scheduled_date,
-        scheduled_time,
-        request_status,
-        requested_by,
-        clients (
-          name,
-          address,
-          lat,
-          lng
-        )
-      `)
-      .contains("requested_by", [techRecord.id])   // key line
-      .order("scheduled_date", { ascending: true });
-
-    if (error) {
-      console.error(error);
-      showToast("Failed to load requested jobs.");
-      return;
-    }
-
-    renderRequestedJobs(jobs || []);
-
-  } catch (err) {
-    console.error(err);
-    showToast("Error loading requested jobs.");
-  }
-}
-
-function renderRequestedJobs(jobs) {
-  const el = document.getElementById("requested-list");
-  el.innerHTML = "";
-
-  if (!jobs.length) {
-    el.innerHTML = "<p>You have not requested any jobs yet.</p>";
-    return;
-  }
-
-  jobs.forEach(job => {
-    const card = document.createElement("div");
-    card.className = "job-card";
-
-    const scheduledDate = job.scheduled_date || "N/A";
-    const scheduledTime = job.scheduled_time || "N/A";
-
-    card.innerHTML = `
-      <h3>${job.title}</h3>
-
-      <p><strong>Client:</strong> ${job.clients?.name}</p>
-      <p><strong>Address:</strong> ${job.clients?.address}</p>
-
-      <p><strong>Scheduled Date:</strong> ${scheduledDate}</p>
-      <p><strong>Scheduled Time:</strong> ${scheduledTime}</p>
-
-      <p><strong>Status:</strong> ${job.request_status || "requested"}</p>
-
-      <button onclick="cancelJobRequest('${job.id}')">Cancel Request</button>
-    `;
-
-    el.appendChild(card);
-  });
-}
-
-async function cancelJobRequest(jobId) {
-  try {
-    // Fetch job
-    const { data: job, error: fetchError } = await sb
-      .from("job_requests")
-      .select("requested_by")
-      .eq("id", jobId)
-      .maybeSingle();
-
-    if (fetchError) throw fetchError;
-
-    let requestedBy = job?.requested_by || [];
-
-    // Remove tech from array
-    requestedBy = requestedBy.filter(id => id !== techRecord.id);
-
-    const { error: updateError } = await sb
-      .from("job_requests")
-      .update({
-        requested_by: requestedBy,
-        request_status: requestedBy.length ? "requested" : "none"
-      })
-      .eq("id", jobId);
-
-    if (updateError) throw updateError;
-
-    showToast("Request canceled.");
-
-    loadRequestedJobs();
-    loadUnassignedJobs();
-
-  } catch (err) {
-    console.error(err);
-    showToast("Failed to cancel request.");
-  }
-}
-
-
-
