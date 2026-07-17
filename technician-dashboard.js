@@ -470,16 +470,16 @@ async function requestJob(jobId) {
       .from("jobs")
       .update({
         request_status: "requested",
-        requested_by: techRecord.id
+        // Wrap the ID in an array to match the column's Array type
+        requested_by: [techRecord.id] 
       })
       .eq("id", jobId);
 
     if (error) throw error;
 
     showToast("Job request submitted.");
-
-    await loadUnassignedJobs(); // job stays visible
-    await loadJobs();           // tech sees it in their “Requested” list if you add one
+    await loadUnassignedJobs();
+    await loadJobs();
 
   } catch (err) {
     console.error(err);
