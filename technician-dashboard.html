@@ -51,7 +51,6 @@
     <div class="nav-link" id="nav-active">🔧 <span>Active Jobs</span></div>
     <div class="nav-link" id="nav-completed">✔️ <span>Completed Jobs</span></div>
     <div class="nav-link" id="nav-unassigned">📦 <span>Available Jobs</span></div>
-    <div class="nav-link" id="nav-requested">👤 <span>My Job Requests</span></div>
     <div class="nav-link" id="nav-profile">👤 <span>Profile</span></div>
 
     <div class="sidebar-footer">
@@ -95,13 +94,6 @@
     <div id="unassigned-panel" class="panel hidden">
       <h2>Available Jobs</h2>
       <div id="unassigned-list"></div>
-    </div>
-
-    <!-- REQUESTED JOBS PANEL -->
-    <div id="requested-panel" class="panel hidden">
-      <h2>My Job Requests</h2>
-      <button class="btn btn-primary" onclick="openRequestJobModal()" style="margin-bottom: 20px;">+ Request New Job</button>
-      <div id="requested-list"></div>
     </div>
 
     <!-- FILES PANEL -->
@@ -154,57 +146,6 @@
       <div id="profile-content"></div>
     </div>
 
-  </div>
-
-  <!-- REQUEST JOB MODAL -->
-  <div id="request-job-modal" class="modal hidden">
-    <div class="modal-overlay" onclick="closeRequestJobModal()"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Request New Job</h2>
-        <button class="modal-close" onclick="closeRequestJobModal()">✕</button>
-      </div>
-      <form id="request-job-form" onsubmit="submitJobRequest(event)">
-        <div class="form-group">
-          <label for="req-title">Job Title</label>
-          <input type="text" id="req-title" name="title" required placeholder="e.g., Furniture Assembly">
-        </div>
-
-        <div class="form-group">
-          <label for="req-description">Description</label>
-          <textarea id="req-description" name="description" required placeholder="Describe the job details..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="req-location">Location</label>
-          <input type="text" id="req-location" name="location" required placeholder="e.g., 123 Main St, City, ST">
-        </div>
-
-        <div class="form-group">
-          <label for="req-priority">Priority</label>
-          <select id="req-priority" name="priority" required>
-            <option value="">Select Priority</option>
-            <option value="Low">Low</option>
-            <option value="Normal">Normal</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
-          </select>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeRequestJobModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Submit Request</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ADMIN NOTIFICATION -->
-  <div id="admin-notification" class="notification hidden">
-    <div class="notification-content">
-      <p id="notification-text"></p>
-      <button onclick="closeNotification()" class="notification-close">✕</button>
-    </div>
   </div>
 
   <!-- LOADER -->
