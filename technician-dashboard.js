@@ -497,6 +497,3 @@ async function submitJobRequest(event) {
 }
 
 
-window.requestJob = function(jobId) {
-  submitJobRequest(jobId);
-};
