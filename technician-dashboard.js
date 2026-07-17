@@ -11,7 +11,6 @@ let currentJobForSignout = null;
 let currentJobForFiles = null;
 let jobRequestSubscription = null;
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 /* CONFIG */
 const SUPABASE_URL = "https://iazvpykfdckpffhakncd.supabase.co";
