@@ -473,9 +473,7 @@ async function submitJobRequest(event) {
         {
           tech_id: techRecord.id,
           title,
-          description,
-          location,
-          priority,
+   
           status: "Pending"
         }
       ]);
@@ -613,7 +611,7 @@ async function checkIn(jobId) {
 async function requestJob(jobId) {
   try {
     const { error } = await sb
-      .from("jobs")
+      .from("job_requests")
       .update({
         request_status: "requested",
         requested_by: [techRecord.id]
