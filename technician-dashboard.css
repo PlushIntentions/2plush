@@ -251,7 +251,7 @@ body::before {
   border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 20px;
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(20px);
   display: block !important;
   position: relative;
   z-index: 10;
