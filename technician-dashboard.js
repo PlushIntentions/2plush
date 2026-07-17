@@ -485,15 +485,4 @@ async function requestJob(jobId) {
     console.error("Request failed:", err);
     showToast("Failed to submit request.");
   }
-
-    // Refresh lists
-    await loadUnassignedJobs();
-    await loadJobs();
-
-    // Return to Active Jobs panel
-    showPanel("active-panel");
-    highlightNav("nav-active");
-
- 
-  }
 }
