@@ -1,5 +1,5 @@
 /* ============================================================
-   TECHNICIAN DASHBOARD — JOB REQUEST FEATURE
+   TECHNICIAN DASHBOARD — FULLY REFACTORED TO MATCH YOUR HTML
    ============================================================ */
 
 let sb;
@@ -9,8 +9,6 @@ let currentUser = null;
 let techRecord = null;
 let currentJobForSignout = null;
 let currentJobForFiles = null;
-let jobRequestSubscription = null;
-
 
 /* CONFIG */
 const SUPABASE_URL = "https://iazvpykfdckpffhakncd.supabase.co";
@@ -29,7 +27,6 @@ function setupSidebarNavigation() {
     "nav-active": "active-panel",
     "nav-completed": "completed-panel",
     "nav-unassigned": "unassigned-panel",
-    "nav-requested": "requested-panel",
     "nav-profile": "profile-panel"
   };
 
@@ -40,15 +37,10 @@ function setupSidebarNavigation() {
     el.addEventListener("click", () => {
       showPanel(navItems[id]);
       highlightNav(id);
-      
-      // Load job requests when panel is shown
-      if (id === "nav-requested") {
-        loadJobRequests();
-      }
     });
   });
 
-  const hamburger = document.getElementById("sidebar-open");
+  const hamburger = document.getElementById("hamburger");
   const sidebar = document.querySelector(".sidebar");
   const backdrop = document.querySelector(".sidebar-backdrop");
   const closeBtn = document.querySelector(".sidebar-close-btn");
@@ -71,15 +63,6 @@ function setupSidebarNavigation() {
     backdrop.addEventListener("click", () => {
       sidebar.classList.remove("open");
       backdrop.classList.remove("show");
-    });
-  }
-
-  // Setup signout button
-  const signoutBtn = document.getElementById("btn-signout");
-  if (signoutBtn) {
-    signoutBtn.addEventListener("click", async () => {
-      await sb.auth.signOut();
-      window.location.href = "/login.html";
     });
   }
 }
@@ -153,32 +136,23 @@ async function bootApp() {
     document.getElementById("loader").classList.add("hidden");
     return;
   }
-
-  if (techRecord.status === "approved") {
+ if (techRecord.status === "approved") {
     await initMap();
     await loadJobs();
     await loadUnassignedJobs();
-    await loadJobRequests();
     renderProfile();
-
-    // Setup realtime listener for job requests (admin-side)
-    setupJobRequestListener();
 
     showPanel("map-panel");
     highlightNav("nav-map");
 
     document.getElementById("loader").classList.add("hidden");
     return;
-  }
+}
 
   await initMap();
   await loadJobs();
   await loadUnassignedJobs();
-  await loadJobRequests();
   renderProfile();
-
-  // Setup realtime listener for job requests (admin-side)
-  setupJobRequestListener();
 
   showPanel("map-panel");
   highlightNav("nav-map");
@@ -228,6 +202,7 @@ function plotJobsOnMap(jobs) {
   });
 }
 
+
 /* LOAD JOBS */
 async function loadJobs() {
   const { data: jobs, error } = await sb
@@ -250,10 +225,6 @@ async function loadJobs() {
   renderActiveJobs(active);
   renderCompletedJobs(completed);
   plotJobsOnMap(jobs);
-
-  // Update sidebar stats
-  document.getElementById("stat-active").textContent = active.length;
-  document.getElementById("stat-completed").textContent = completed.length;
 }
 
 /* LOAD UNASSIGNED JOBS */
@@ -275,23 +246,6 @@ async function loadUnassignedJobs() {
   renderUnassignedJobs(jobs);
 }
 
-/* LOAD JOB REQUESTS */
-async function loadJobRequests() {
-  const { data: requests, error } = await sb
-    .from("job_requests")
-    .select("*")
-    .eq("tech_id", techRecord.id)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Failed to load job requests:", error);
-    showToast("Failed to load job requests.");
-    return;
-  }
-
-  renderJobRequests(requests || []);
-}
-
 /* RENDER JOB LISTS */
 function renderActiveJobs(jobs) {
   const el = document.getElementById("active-list");
@@ -311,9 +265,11 @@ function renderActiveJobs(jobs) {
       <p><strong>Client:</strong> ${job.clients?.name}</p>
       <p><strong>Address:</strong> ${job.clients?.address}</p>
 
-      <button class="btn" onclick="checkIn('${job.id}')">Check In</button>
-      <button class="btn" onclick="markComplete('${job.id}')">Complete</button>
-      <button class="btn" onclick="openFilesPanel('${job.id}')">Files</button>
+      <button onclick="checkIn('${job.id}')">Check In</button>
+      <button onclick="markComplete('${job.id}')">Complete</button>
+      <button onclick="openFilesPanel('${job.id}')">Files</button>
+
+
     `;
 
     el.appendChild(card);
@@ -336,7 +292,7 @@ function renderCompletedJobs(jobs) {
     card.innerHTML = `
       <h3>${job.title}</h3>
       <p><strong>Client:</strong> ${job.clients?.name}</p>
-      <p><strong>Completed:</strong> ${job.completed_time || "N/A"}</p>
+      <p><strong>Completed:</strong> ${job.completed_time}</p>
     `;
 
     el.appendChild(card);
@@ -369,39 +325,9 @@ function renderUnassignedJobs(jobs) {
   });
 }
 
-/* RENDER JOB REQUESTS */
-function renderJobRequests(requests) {
-  const el = document.getElementById("requested-list");
-  el.innerHTML = "";
-
-  if (!requests.length) {
-    el.innerHTML = "<p>No job requests yet. Create one to get started!</p>";
-    return;
-  }
-
-  requests.forEach(req => {
-    const card = document.createElement("div");
-    card.className = "job-card";
-
-    const statusClass = req.status === "Approved" ? "status-approved" : 
-                       req.status === "Rejected" ? "status-rejected" : 
-                       "status-pending";
-
-    card.innerHTML = `
-      <h3>${req.title}</h3>
-      <p><strong>Location:</strong> ${req.location}</p>
-      <p><strong>Priority:</strong> <span class="${statusClass}">${req.priority}</span></p>
-      <p><strong>Description:</strong> ${req.description}</p>
-      <p><strong>Status:</strong> <span class="${statusClass}">${req.status}</span></p>
-      <p><strong>Requested:</strong> ${new Date(req.created_at).toLocaleDateString()}</p>
-    `;
-
-    el.appendChild(card);
-  });
-}
 
 /* FILES PANEL */
-function openFilesPanel(jobId) {
+function showFilesPanel(jobId) {
   currentJobForFiles = jobId;
   showPanel("files-panel");
 }
@@ -419,13 +345,6 @@ function markComplete(jobId) {
 
 function cancelSignOutUpload() {
   currentJobForSignout = null;
-  showPanel("active-panel");
-}
-
-async function submitSignOutUpload() {
-  showToast("Job completion submitted.");
-  currentJobForSignout = null;
-  await loadJobs();
   showPanel("active-panel");
 }
 
@@ -448,142 +367,6 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
-/* REQUEST JOB MODAL */
-function openRequestJobModal() {
-  document.getElementById("request-job-modal").classList.remove("hidden");
-}
-
-function closeRequestJobModal() {
-  document.getElementById("request-job-modal").classList.add("hidden");
-  document.getElementById("request-job-form").reset();
-}
-
-/* SUBMIT JOB REQUEST */
-async function submitJobRequest(event) {
-  event.preventDefault();
-
-  const title = document.getElementById("req-title").value;
-  const description = document.getElementById("req-description").value;
-  const location = document.getElementById("req-location").value;
-  const priority = document.getElementById("req-priority").value;
-
-  try {
-    const { data, error } = await sb
-      .from("job_requests")
-      .insert([
-        {
-          tech_id: techRecord.id,
-          title,
-   
-          status: "Pending"
-        }
-      ]);
-
-    if (error) throw error;
-
-    showToast("Job request submitted successfully!");
-    closeRequestJobModal();
-    await loadJobRequests();
-
-  } catch (err) {
-    console.error("Error submitting job request:", err);
-    showToast("Failed to submit job request.");
-  }
-}
-
-/* SETUP JOB REQUEST LISTENER (Admin-side) */
-function setupJobRequestListener() {
-  if (jobRequestSubscription) {
-    jobRequestSubscription.unsubscribe();
-  }
-
-  jobRequestSubscription = sb
-    .channel("public:job_requests")
-    .on("postgres_changes", 
-      { event: "INSERT", schema: "public", table: "job_requests" },
-      (payload) => {
-        console.log("New job request:", payload);
-        showAdminNotification(payload.new);
-      }
-    )
-    .subscribe();
-}
-
-/* SHOW ADMIN NOTIFICATION */
-function showAdminNotification(request) {
-  const notificationEl = document.getElementById("admin-notification");
-  const notificationText = document.getElementById("notification-text");
-
-  notificationText.textContent = `New job request: "${request.title}" from ${request.tech_id} - Priority: ${request.priority}`;
-  notificationEl.classList.remove("hidden");
-
-  // Auto-hide after 5 seconds
-  setTimeout(() => {
-    notificationEl.classList.add("hidden");
-  }, 5000);
-}
-
-/* CLOSE NOTIFICATION */
-function closeNotification() {
-  document.getElementById("admin-notification").classList.add("hidden");
-}
-
-/* APPROVE JOB REQUEST (Admin action) */
-async function approveJobRequest(requestId, techId, title, description, location) {
-  try {
-    // Create a new workorder
-    const { data: workorder, error: woError } = await sb
-      .from("jobs")
-      .insert([
-        {
-          technician_id: techId,
-          title,
-          description,
-          location,
-          status: "created",
-          id: requestId
-        }
-      ])
-      .select();
-
-    if (woError) throw woError;
-
-    // Update job request status to Approved
-    const { error: updateError } = await sb
-      .from("job_requests")
-      .update({ status: "Approved" })
-      .eq("id", requestId);
-
-    if (updateError) throw updateError;
-
-    showToast("Job request approved and workorder created.");
-    return workorder[0];
-
-  } catch (err) {
-    console.error("Error approving job request:", err);
-    showToast("Failed to approve job request.");
-  }
-}
-
-/* REJECT JOB REQUEST (Admin action) */
-async function rejectJobRequest(requestId) {
-  try {
-    const { error } = await sb
-      .from("job_requests")
-      .update({ status: "Rejected" })
-      .eq("id", requestId);
-
-    if (error) throw error;
-
-    showToast("Job request rejected.");
-
-  } catch (err) {
-    console.error("Error rejecting job request:", err);
-    showToast("Failed to reject job request.");
-  }
-}
-
-/* CHECK IN */
 async function checkIn(jobId) {
   try {
     const timestamp = new Date().toISOString();
@@ -599,7 +382,7 @@ async function checkIn(jobId) {
     if (error) throw error;
 
     showToast("Clock-in recorded.");
-    await loadJobs();
+    loadActiveJobs();
     showPanel("active-panel");
 
   } catch (err) {
@@ -608,16 +391,88 @@ async function checkIn(jobId) {
   }
 }
 
-/* REQUEST JOB */
+async function loadActiveJobs() {
+  try {
+    const { data, error } = await sb
+      .from("jobs")
+      .select("*")
+      .eq("status", "in_progress")
+      .order("check_in_time", { ascending: false });
+
+    if (error) throw error;
+
+    const container = document.getElementById("active-list");
+    container.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      container.innerHTML = "<p>No active jobs.</p>";
+      return;
+    }
+
+    data.forEach(job => {
+      const card = document.createElement("div");
+      card.className = "job-card";
+
+      card.innerHTML = `
+        <h3>${job.title}</h3>
+        <p>${job.address}</p>
+        <p><strong>Clock-in:</strong> ${job.check_in_time || "Not recorded"}</p>
+        <button class="btn" onclick="showJobFiles(${job.id})">Files</button>
+        <button class="btn" onclick="openSignout(${job.id})">Complete Job</button>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to load active jobs.");
+  }
+}
+
+
+async function checkIn(jobId) {
+  try {
+    const timestamp = new Date().toISOString();
+    const { data, error } = await sb
+      .from("jobs")
+      .update({ status: "in_progress", check_in_time: timestamp })
+      .eq("id", jobId);
+
+    if (error) throw error;
+
+    showToast("Clock-in recorded.");
+    loadActiveJobs(); 
+    showPanel("active-panel");
+  } catch (err) {
+    console.error(err);
+    showToast("Clock-in failed.");
+  }
+}
+﻿
+function openPanel(panelId) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
+  document.getElementById(panelId)?.classList.remove("hidden");
+}
+
+
+  // Show the selected panel
+  const target = document.getElementById(panelId);
+  if (target) {
+    target.classList.remove("hidden");
+  } else {
+    console.error("Panel not found:", panelId);
+  }
+
 async function requestJob(jobId) {
   try {
     const { error } = await sb
-      .from("job_requests")
+      .from("jobs")
       .update({
         request_status: "requested",
         requested_by: techRecord.id
       })
-      .eq("tech_id", jobId);
+      .eq("id", jobId);
 
     if (error) throw error;
 
@@ -629,17 +484,5 @@ async function requestJob(jobId) {
   } catch (err) {
     console.error(err);
     showToast("Failed to request job.");
-  }
-}
-
-/* DECLINE JOB */
-async function declineJob(jobId) {
-  try {
-    showToast("Job declined.");
-    await loadUnassignedJobs();
-
-  } catch (err) {
-    console.error(err);
-    showToast("Failed to decline job.");
   }
 }
