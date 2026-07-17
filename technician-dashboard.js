@@ -478,7 +478,6 @@ async function requestJob(jobId) {
     if (error) throw error;
 
     showToast("Request submitted for approval.");
-    loadMyRequests(); // optional: refresh technician request list
     showPanel("requests-panel"); // optional: switch panel like checkIn does
 
   } catch (err) {
