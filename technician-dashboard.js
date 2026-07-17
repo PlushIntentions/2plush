@@ -485,7 +485,6 @@ async function requestJob(jobId) {
     console.error("Request failed:", err);
     showToast("Failed to submit request.");
   }
-}
 
     // Refresh lists
     await loadUnassignedJobs();
@@ -495,8 +494,6 @@ async function requestJob(jobId) {
     showPanel("active-panel");
     highlightNav("nav-active");
 
-  } catch (err) {
-    console.error(err);
-    showToast("Failed to request job.");
+ 
   }
 }
