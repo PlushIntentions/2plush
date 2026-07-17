@@ -495,3 +495,8 @@ async function submitJobRequest(event) {
     showToast("Failed to submit job request.");
   }
 }
+
+
+window.requestJob = function(jobId) {
+  submitJobRequest(jobId);
+};
