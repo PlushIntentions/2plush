@@ -466,18 +466,26 @@ function openPanel(panelId) {
 
 async function requestJob(jobId) {
   try {
-    // Assign job to this technician
-    const { error } = await sb
-      .from("jobs")
-      .update({
-        technician_id: techRecord.id,
-        status: "assigned"
-      })
-      .eq("id", jobId);
+    const { data, error } = await sb
+      .from("job_requests")
+      .insert({
+        job_id: jobId,
+        tech_id: techRecord.id,
+        status: "Pending",
+        created_at: new Date().toISOString()
+      });
 
     if (error) throw error;
 
-    showToast("Job requested successfully.");
+    showToast("Request submitted for approval.");
+    loadMyRequests(); // optional: refresh technician request list
+    showPanel("requests-panel"); // optional: switch panel like checkIn does
+
+  } catch (err) {
+    console.error("Request failed:", err);
+    showToast("Failed to submit request.");
+  }
+}
 
     // Refresh lists
     await loadUnassignedJobs();
