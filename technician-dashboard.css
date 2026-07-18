@@ -252,21 +252,18 @@ body::before {
   padding: 20px;
   margin-bottom: 20px;
   backdrop-filter: blur(20px);
-  display: block !important;
   position: relative;
   z-index: 10;
 }
 
 .panel.hidden {
-  position: absolute;
-  top: -9999px;
-  left: -9999px;
-  width: 0;
-  height: 0;
-  overflow: hidden;
+  visibility: hidden;
   opacity: 0;
   pointer-events: none;
+  position: absolute;
+  inset: 0;
 }
+
 
 
 
