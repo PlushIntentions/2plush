@@ -248,20 +248,22 @@ body::before {
 .panel {
   background: var(--glass-bg);
   border: 1px solid var(--glass-brd);
-  border-radius: 5px var(--radius);
+  border-radius: var(--radius);
   padding: 20px;
   margin-bottom: 20px;
   backdrop-filter: blur(20px);
+  display: block !important;
   position: relative;
   z-index: 10;
 }
 
 .panel.hidden {
-  visibility: hidden;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
+  display: none !important;
+}
+
+.panel h2 {
+  margin-bottom: 16px;
+  font-size: 18px;
 }
 
 /* Map panel wrapper */
