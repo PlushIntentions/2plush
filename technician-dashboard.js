@@ -485,3 +485,19 @@ async function requestJob(jobId) {
     showToast("Failed to submit request.");
   }
 }
+function showPanel(panelId) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.add("hidden"));
+
+  const target = document.getElementById(panelId);
+  target.classList.remove("hidden");
+
+  if (panelId === "map-panel") {
+    setTimeout(() => {
+      if (window.map) {
+        map.resize();
+      } else {
+        initMap();
+      }
+    }, 150);
+  }
+}
