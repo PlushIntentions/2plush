@@ -264,11 +264,6 @@ body::before {
   inset: 0;
 }
 
-
-
-
-
-
 /* Map panel wrapper */
 #map-panel {
   position: relative;
@@ -308,7 +303,7 @@ body::before {
 /* Fix for flex shrinking */
 .map-wrapper {
   flex: 1;
-  min-width: 10;
+  min-width: 0;
   position: relative;
 }
 /* BUTTONS */
@@ -687,3 +682,16 @@ form {
     height: calc(100vh - var(--top-h) - 32px);
   }
 }
+
+.dashboard {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
