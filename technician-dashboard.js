@@ -160,6 +160,18 @@ async function bootApp() {
   document.getElementById("loader").classList.add("hidden");
 }
 
+
+
+
+document.getElementById("nav-requests").addEventListener("click", () => {
+  showPanel("requests-panel");
+  loadRequestedJobs();
+});
+
+
+
+
+
 /* MAP INIT */
 async function initMap() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
