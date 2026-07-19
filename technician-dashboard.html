@@ -163,6 +163,42 @@
   <!-- TOAST -->
   <div id="toast"></div>
 
+  
+  
+  <!-- UNASSIGNED JOB DETAILS MODAL -->
+<div id="unassignedJobModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeUnassignedModal()">&times;</span>
+
+    <h2 id="uaModalTitle"></h2>
+
+    <div class="modal-section">
+      <h3>Address</h3>
+      <p id="uaModalAddress"></p>
+    </div>
+
+    <div class="modal-section">
+      <h3>Status</h3>
+      <p id="uaModalStatus"></p>
+    </div>
+
+    <div class="modal-section">
+      <h3>Description</h3>
+      <div class="modal-description-box">
+        <p id="uaModalDescription"></p>
+      </div>
+    </div>
+
+    <button id="uaRequestBtn" class="request-btn">
+      Request Job
+    </button>
+
+  </div>
+</div>
+
+  
+ 
+  
   <!-- JS -->
   <script src="https://tech.plushintentions.work/technician-dashboard.js" defer></script>
 
