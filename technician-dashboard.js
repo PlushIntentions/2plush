@@ -200,24 +200,25 @@ function plotJobsOnMap(jobs) {
   jobMarkers = [];
 
   jobs.forEach(job => {
-    if (!job.clients?.lat || !job.clients?.lng) return;
+  if (!job.lat || !job.lng) return;
 
-    const el = document.createElement("div");
-    el.className = "job-marker";
+  const el = document.createElement("div");
+  el.className = "job-marker";
 
-    const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
-      <strong>${job.title}</strong><br/>
-      ${job.clients.name}<br/>
-      ${job.clients.address}
-    `);
+  const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
+    <strong>${job.title}</strong><br/>
+    ${job.clients?.name || "No client"}<br/>
+    ${job.clients?.address || "No address"}
+  `);
 
-    const marker = new mapboxgl.Marker(el)
-      .setLngLat([job.clients.lng, job.clients.lat])
-      .setPopup(popup)
-      .addTo(map);
+  const marker = new mapboxgl.Marker(el)
+    .setLngLat([job.lng, job.lat])   // ⭐ FIXED: using job.lng/job.lat
+    .setPopup(popup)
+    .addTo(map);
 
-    jobMarkers.push(marker);
-  });
+  jobMarkers.push(marker);
+});
+
 }
 
 
