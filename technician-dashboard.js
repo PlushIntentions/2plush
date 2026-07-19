@@ -317,6 +317,11 @@ function renderUnassignedJobs(jobs) {
       <p><strong>Client:</strong> ${job.clients?.name}</p>
       <p><strong>Address:</strong> ${job.clients?.address}</p>
 
+      <!-- ⭐ NEW: View Details button -->
+      <button class="btn" onclick='openUnassignedModal(${JSON.stringify(job)})'>
+        View Details
+      </button>
+
       <button class="btn btn-primary" onclick="requestJob('${job.id}')">Request</button>
       <button class="btn btn-secondary" onclick="declineJob('${job.id}')">Decline</button>
     `;
@@ -324,6 +329,7 @@ function renderUnassignedJobs(jobs) {
     el.appendChild(card);
   });
 }
+
 
 
 
