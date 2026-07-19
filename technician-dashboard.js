@@ -522,11 +522,59 @@ function showPanel(panelId) {
 }
 
 
-
 document.getElementById("nav-requests").addEventListener("click", () => {
   showPanel("requests-panel");
   loadRequestedJobs();
 });
+
+
+
+async function loadRequestedJobs() {
+  const { data, error } = await sb
+    .from("job_requests")
+    .select(`
+      *,
+      jobs (*, clients (name, address))
+    `)
+    .eq("tech_id", techRecord.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    document.getElementById("requested-list").innerHTML = "<p>Failed to load requested jobs.</p>";
+    return;
+  }
+
+  renderRequestedJobs(data);
+}
+
+
+function renderRequestedJobs(requests) {
+  const el = document.getElementById("requested-list");
+  el.innerHTML = "";
+
+  if (!requests.length) {
+    el.innerHTML = "<p>No requested jobs yet.</p>";
+    return;
+  }
+
+  requests.forEach(req => {
+    const job = req.jobs;
+
+    const card = document.createElement("div");
+    card.className = "job-card";
+
+    card.innerHTML = `
+      <h3>${job.title}</h3>
+      <p><strong>Client:</strong> ${job.clients?.name}</p>
+      <p><strong>Address:</strong> ${job.clients?.address}</p>
+      <p><strong>Status:</strong> ${req.status}</p>
+    `;
+
+    el.appendChild(card);
+  });
+}
+
 
 
 
