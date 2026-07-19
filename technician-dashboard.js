@@ -623,4 +623,21 @@ function openUnassignedModal(job) {
 function closeUnassignedModal() {
   document.getElementById("unassignedJobModal").style.display = "none";
 }
+function openJobDetailsModal(job) {
+  document.getElementById("uaModalTitle").innerText = job.title;
+  document.getElementById("uaModalAddress").innerText = job.clients?.address || "No address";
+  document.getElementById("uaModalStatus").innerText = job.status || "Unknown";
+  document.getElementById("uaModalDescription").innerText = job.description || "No description provided.";
+
+  document.getElementById("unassignedJobModal").style.display = "flex";
+
+  // If job is unassigned → allow requesting
+  if (!job.technician_id) {
+    document.getElementById("uaRequestBtn").style.display = "block";
+    document.getElementById("uaRequestBtn").onclick = () => requestJob(job.id);
+  } else {
+    // Hide request button for assigned jobs
+    document.getElementById("uaRequestBtn").style.display = "none";
+  }
+}
 
