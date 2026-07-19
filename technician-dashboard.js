@@ -578,8 +578,23 @@ function renderRequestedJobs(requests) {
   }
 
   requests.forEach(req => {
-    const job = req.jobs;
+    const job = req.job;
 
+    // ⭐ SAFETY CHECK — job may be undefined
+    if (!job) {
+      const card = document.createElement("div");
+      card.className = "job-card";
+      card.innerHTML = `
+        <h3>Unknown Job</h3>
+        <p><strong>Job ID:</strong> ${req.job_id}</p>
+        <p><strong>Status:</strong> ${req.status}</p>
+        <p>This job no longer exists or is missing from the jobs table.</p>
+      `;
+      el.appendChild(card);
+      return; // skip to next request
+    }
+
+    // ⭐ Normal rendering
     const card = document.createElement("div");
     card.className = "job-card";
 
@@ -593,6 +608,7 @@ function renderRequestedJobs(requests) {
     el.appendChild(card);
   });
 }
+
 
 
 
