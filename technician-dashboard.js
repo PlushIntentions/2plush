@@ -531,13 +531,20 @@ document.getElementById("nav-requests").addEventListener("click", () => {
 
 async function loadRequestedJobs() {
   const { data, error } = await sb
-  .from("job_requests")
-  .select(`
-    *,
-    jobs (*, clients (name, address))
-  `)
-  .eq("tech_id", techRecord.id)
-  .order("created_at", { ascending: false });
+    .from("job_requests")
+    .select(`
+      id,
+      status,
+      created_at,
+      jobs (
+        id,
+        title,
+        description,
+        clients (name, address)
+      )
+    `)
+    .eq("tech_id", techRecord.id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error(error);
@@ -545,10 +552,7 @@ async function loadRequestedJobs() {
     return;
   }
 
-
-
-
-  renderRequestedJobs(merged);
+  renderRequestedJobs(data);
 }
 
 
