@@ -697,3 +697,57 @@ form {
   overflow: hidden;
 }
 
+
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #1a1a1a;
+  border: 1px solid #b76e79;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  color: white;
+}
+
+.close-modal {
+  float: right;
+  font-size: 28px;
+  cursor: pointer;
+  color: #b76e79;
+}
+
+.modal-section {
+  margin-bottom: 15px;
+}
+
+.modal-description-box {
+  background: #111;
+  border: 1px solid #b76e79;
+  padding: 10px;
+  border-radius: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.request-btn {
+  width: 100%;
+  padding: 12px;
+  background: #b76e79;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  margin-top: 20px;
+  cursor: pointer;
+}
