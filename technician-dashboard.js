@@ -326,6 +326,7 @@ function renderUnassignedJobs(jobs) {
 }
 
 
+
 /* FILES PANEL */
 function showFilesPanel(jobId) {
   currentJobForFiles = jobId;
