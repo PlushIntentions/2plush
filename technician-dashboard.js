@@ -173,7 +173,7 @@ document.getElementById("nav-requests").addEventListener("click", () => {
 
 
 /* MAP INIT */
-async function initMap() {
+function initMap() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
   map = new mapboxgl.Map({
     container: "map",
