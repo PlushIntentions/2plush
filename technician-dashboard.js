@@ -543,7 +543,7 @@ async function loadRequestedJobs() {
   }
 
   // Fetch jobs manually since no FK exists
-  const jobIds = requests.map(r => r.job_id);
+  
 
   const { data, error } = await sb
   .from("job_requests")
