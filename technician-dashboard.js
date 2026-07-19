@@ -195,13 +195,6 @@ function initMap() {
 function plotJobsOnMap(jobs) {
   if (!map) return;
 
-  // Remove old markers
-  jobMarkers.forEach(m => m.remove());
-  jobMarkers = [];
-
- function plotJobsOnMap(jobs) {
-  if (!map) return;
-
   jobMarkers.forEach(m => m.remove());
   jobMarkers = [];
 
