@@ -175,6 +175,9 @@ document.getElementById("nav-requests").addEventListener("click", () => {
 /* MAP INIT */
 function initMap() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
+   map.on("load", () => {
+  loadJobs();        // markers now show correctly
+});
   map = new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/streets-v11",
