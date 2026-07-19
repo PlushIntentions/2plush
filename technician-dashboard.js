@@ -545,24 +545,15 @@ async function loadRequestedJobs() {
   // Fetch jobs manually since no FK exists
   const jobIds = requests.map(r => r.job_id);
 
-  const { data: jobs, error: jobsError } = await sb
-    .from("jobs")
-    .select("*, clients(name, address)")
-    .in("id", jobIds);
+  const { data, error } = await sb
+  .from("job_requests")
+  .select(`
+    *,
+    jobs (*, clients (name, address))
+  `)
+  .eq("tech_id", techRecord.id)
+  .order("created_at", { ascending: false });
 
-  if (jobsError) {
-    console.error(jobsError);
-    document.getElementById("requested-list").innerHTML = "<p>Failed to load job details.</p>";
-    return;
-  }
-
-  // Merge job_requests + jobs
-  const merged = requests.map(req => {
-    return {
-      ...req,
-      job: jobs.find(j => j.id === req.job_id)
-    };
-  });
 
   renderRequestedJobs(merged);
 }
