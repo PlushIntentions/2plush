@@ -199,27 +199,37 @@ function plotJobsOnMap(jobs) {
   jobMarkers.forEach(m => m.remove());
   jobMarkers = [];
 
+ function plotJobsOnMap(jobs) {
+  if (!map) return;
+
+  jobMarkers.forEach(m => m.remove());
+  jobMarkers = [];
+
   jobs.forEach(job => {
-  if (!job.lat || !job.lng) return;
+    // ⭐ FIX: use jobs table fields
+    if (!job.latitude || !job.longitude) {
+      console.warn("Missing coords for job:", job.id, job.latitude, job.longitude);
+      return;
+    }
 
-  const el = document.createElement("div");
-  el.className = "job-marker";
+    const el = document.createElement("div");
+    el.className = "job-marker";
 
-  const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
-    <strong>${job.title}</strong><br/>
-    ${job.clients?.name || "No client"}<br/>
-    ${job.clients?.address || "No address"}
-  `);
+    const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
+      <strong>${job.title}</strong><br/>
+      ${job.clients?.name || "No client"}<br/>
+      ${job.address || "No job address"}
+    `);
 
-  const marker = new mapboxgl.Marker(el)
-    .setLngLat([job.lng, job.lat])   // ⭐ FIXED: using job.lng/job.lat
-    .setPopup(popup)
-    .addTo(map);
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([job.longitude, job.latitude])   // ⭐ FIXED
+      .setPopup(popup)
+      .addTo(map);
 
-  jobMarkers.push(marker);
-});
-
+    jobMarkers.push(marker);
+  });
 }
+
 
 
 /* LOAD JOBS */
