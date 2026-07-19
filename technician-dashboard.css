@@ -751,3 +751,25 @@ form {
   margin-top: 20px;
   cursor: pointer;
 }
+.job-marker {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  cursor: pointer;
+}
+
+/* Neon orange for unassigned */
+.job-marker.unassigned {
+  background: #ff5f00; /* neon orange */
+}
+
+/* Green for assigned */
+.job-marker.assigned {
+  background: #00cc44; /* bright green */
+}
+
+/* Yellow for requested */
+.job-marker.requested {
+  background: #ffeb3b; /* bright yellow */
+}
