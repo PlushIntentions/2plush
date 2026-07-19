@@ -199,28 +199,39 @@ function plotJobsOnMap(jobs) {
   jobMarkers = [];
 
   jobs.forEach(job => {
-    // ⭐ FIX: use jobs table fields
-    if (!job.latitude || !job.longitude) {
-      console.warn("Missing coords for job:", job.id, job.latitude, job.longitude);
-      return;
-    }
+  const lat = Number(job.latitude);
+  const lng = Number(job.longitude);
 
-    const el = document.createElement("div");
-    el.className = "job-marker";
+  if (!lat || !lng) {
+    console.warn("Missing coords for job:", job.id, lat, lng);
+    return;
+  }
 
-    const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
-      <strong>${job.title}</strong><br/>
-      ${job.clients?.name || "No client"}<br/>
-      ${job.address || "No job address"}
-    `);
+  const el = document.createElement("div");
+  el.className = "job-marker";
 
-    const marker = new mapboxgl.Marker(el)
-      .setLngLat([job.longitude, job.latitude])   // ⭐ FIXED
-      .setPopup(popup)
-      .addTo(map);
+  // ⭐ Assign color based on job.status
+  if (job.status === "unassigned") {
+    el.classList.add("unassigned");
+  } else if (job.status === "assigned") {
+    el.classList.add("assigned");
+  } else if (job.status === "requested") {
+    el.classList.add("requested");
+  }
 
-    jobMarkers.push(marker);
-  });
+  const popup = new mapboxgl.Popup({ offset: 12 }).setHTML(`
+    <strong>${job.title}</strong><br/>
+    ${job.clients?.name || "No client"}<br/>
+    ${job.address || "No job address"}
+  `);
+
+  const marker = new mapboxgl.Marker(el)
+    .setLngLat([lng, lat])
+    .setPopup(popup)
+    .addTo(map);
+
+  jobMarkers.push(marker);
+});
 }
 
 
