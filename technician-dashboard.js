@@ -280,6 +280,9 @@ function renderActiveJobs(jobs) {
       <button onclick="checkIn('${job.id}')">Check In</button>
       <button onclick="markComplete('${job.id}')">Complete</button>
       <button onclick="openFilesPanel('${job.id}')">Files</button>
+<button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
+  Details
+</button>
 
 
     `;
@@ -307,6 +310,11 @@ function renderCompletedJobs(jobs) {
       <p><strong>Completed:</strong> ${job.completed_time}</p>
     `;
 
+<button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
+  Details
+</button>
+
+     
     el.appendChild(card);
   });
 }
@@ -330,9 +338,10 @@ function renderUnassignedJobs(jobs) {
       <p><strong>Address:</strong> ${job.clients?.address}</p>
 
       <!-- ⭐ NEW: View Details button -->
-      <button class="btn" onclick='openUnassignedModal(${JSON.stringify(job)})'>
-        View Details
-      </button>
+     <button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
+  View Details
+</button>
+
 
       <button class="btn btn-primary" onclick="requestJob('${job.id}')">Request</button>
       <button class="btn btn-secondary" onclick="declineJob('${job.id}')">Decline</button>
@@ -438,6 +447,11 @@ async function loadActiveJobs() {
         <p><strong>Clock-in:</strong> ${job.check_in_time || "Not recorded"}</p>
         <button class="btn" onclick="showJobFiles(${job.id})">Files</button>
         <button class="btn" onclick="openSignout(${job.id})">Complete Job</button>
+
+        <button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
+  Details
+</button>
+
       `;
 
       container.appendChild(card);
@@ -589,7 +603,13 @@ function renderRequestedJobs(requests) {
       <p><strong>Client:</strong> ${job.clients?.name}</p>
       <p><strong>Address:</strong> ${job.clients?.address}</p>
       <p><strong>Status:</strong> ${req.status}</p>
+      <button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
+  Details
+</button>
+
     `;
+     
+
 
     el.appendChild(card);
   });
