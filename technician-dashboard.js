@@ -175,6 +175,7 @@ document.getElementById("nav-requests").addEventListener("click", () => {
 /* MAP INIT */
 function initMap() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
+
   map = new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/streets-v11",
@@ -183,10 +184,13 @@ function initMap() {
   });
 
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+  // ⭐ MUST come AFTER map is created
+  map.on("load", () => {
+    loadJobs();        // markers now show correctly
+  });
 }
-map.on("load", () => {
-  loadJobs();        // markers now show correctly
-});
+
 /* MAP MARKERS */
 function plotJobsOnMap(jobs) {
   if (!map) return;
