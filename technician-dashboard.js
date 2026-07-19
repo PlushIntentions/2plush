@@ -280,9 +280,7 @@ function renderActiveJobs(jobs) {
       <button onclick="checkIn('${job.id}')">Check In</button>
       <button onclick="markComplete('${job.id}')">Complete</button>
       <button onclick="openFilesPanel('${job.id}')">Files</button>
-<button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
-  Details
-</button>
+
 
 
     `;
@@ -308,11 +306,13 @@ function renderCompletedJobs(jobs) {
       <h3>${job.title}</h3>
       <p><strong>Client:</strong> ${job.clients?.name}</p>
       <p><strong>Completed:</strong> ${job.completed_time}</p>
+      <button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
+  View Details
+</button>
+
     `;
 
-<button class="btn" onclick='openJobDetailsModal(${JSON.stringify(job)})'>
-  Details
-</button>
+
 
      
     el.appendChild(card);
