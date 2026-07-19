@@ -510,6 +510,16 @@ function showPanel(panelId) {
 }
 
 
+
+document.getElementById("nav-requests").addEventListener("click", () => {
+  showPanel("requests-panel");
+  loadRequestedJobs();
+});
+
+
+
+
+
 /* ============================
    UNASSIGNED JOB MODAL LOGIC
    ============================ */
