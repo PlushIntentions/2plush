@@ -530,21 +530,6 @@ document.getElementById("nav-requests").addEventListener("click", () => {
 
 
 async function loadRequestedJobs() {
-  const { data: requests, error } = await sb
-    .from("job_requests")
-    .select("*")
-    .eq("tech_id", techRecord.id)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    document.getElementById("requested-list").innerHTML = "<p>Failed to load requested jobs.</p>";
-    return;
-  }
-
-  // Fetch jobs manually since no FK exists
-  
-
   const { data, error } = await sb
   .from("job_requests")
   .select(`
@@ -553,6 +538,14 @@ async function loadRequestedJobs() {
   `)
   .eq("tech_id", techRecord.id)
   .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    document.getElementById("requested-list").innerHTML = "<p>Failed to load requested jobs.</p>";
+    return;
+  }
+
+
 
 
   renderRequestedJobs(merged);
