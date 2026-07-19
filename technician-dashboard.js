@@ -508,3 +508,29 @@ function showPanel(panelId) {
     }, 150);
   }
 }
+
+
+/* ============================
+   UNASSIGNED JOB MODAL LOGIC
+   ============================ */
+
+function openUnassignedModal(job) {
+  // Fill modal fields
+  document.getElementById("uaModalTitle").innerText = job.title;
+  document.getElementById("uaModalAddress").innerText = job.clients?.address || "No address";
+  document.getElementById("uaModalStatus").innerText = job.status || "unassigned";
+  document.getElementById("uaModalDescription").innerText = job.description || "No description provided.";
+
+  // Show modal
+  document.getElementById("unassignedJobModal").style.display = "flex";
+
+  // Attach request handler
+  document.getElementById("uaRequestBtn").onclick = function () {
+    requestJob(job.id);
+  };
+}
+
+function closeUnassignedModal() {
+  document.getElementById("unassignedJobModal").style.display = "none";
+}
+
